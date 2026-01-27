@@ -6,6 +6,7 @@ import workspacesRouter from './routes/workspaces.js';
 import projectsRouter from './routes/projects.js';
 import tasksRouter from './routes/tasks.js';
 import authRouter from './routes/auth.js';
+import { requireAuth } from './middleware/auth.js';
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', authRouter);
+app.use('/api', requireAuth);
 app.use('/api/users', usersRouter);
 app.use('/api/workspaces', workspacesRouter);
 app.use('/api/projects', projectsRouter);

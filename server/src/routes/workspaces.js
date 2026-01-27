@@ -10,6 +10,7 @@ import {
   tasks,
 } from '../db/schema.js';
 import { generateId } from '../lib/ids.js';
+import { isWorkspaceAdmin } from '../lib/permissions.js';
 
 const router = Router();
 
@@ -137,6 +138,7 @@ router.post('/', async (req, res, next) => {
     }
 
     const workspaceId = generateId('org');
+    const memberId = generateId('wm');
 
     await db.insert(workspaces).values({
       id: workspaceId,
@@ -147,8 +149,47 @@ router.post('/', async (req, res, next) => {
       image_url: image_url || null,
     });
 
+    await db.insert(workspaceMembers).values({
+      id: memberId,
+      workspaceId,
+      userId: ownerId,
+      role: 'ADMIN',
+      message: null,
+    });
+
     const payload = await buildWorkspacePayload(workspaceId);
     res.status(201).json(payload);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.patch('/:id', async (req, res, next) => {
+  try {
+    const admin =
+      req.user.role === 'ADMIN' ||
+      (await isWorkspaceAdmin(req.user.id, req.params.id));
+    if (!admin) return res.status(403).json({ message: 'Forbidden' });
+
+    const { name, slug, description, image_url, settings } = req.body;
+    const updates = {
+      ...(name ? { name } : {}),
+      ...(slug ? { slug } : {}),
+      ...(description !== undefined ? { description } : {}),
+      ...(image_url !== undefined ? { image_url } : {}),
+      ...(settings !== undefined ? { settings } : {}),
+      updatedAt: new Date(),
+    };
+
+    await db
+      .update(workspaces)
+      .set(updates)
+      .where(eq(workspaces.id, req.params.id));
+
+    const payload = await buildWorkspacePayload(req.params.id, req.user);
+    if (!payload)
+      return res.status(404).json({ message: 'Workspace not found' });
+    res.json(payload);
   } catch (error) {
     next(error);
   }
