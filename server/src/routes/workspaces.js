@@ -10,6 +10,7 @@ import {
   tasks,
 } from '../db/schema.js';
 import { generateId } from '../lib/ids.js';
+import { getProjectsForUser, isWorkspaceAdmin } from '../lib/permissions.js';
 
 const router = Router();
 
@@ -19,7 +20,7 @@ const stripSensitive = (user) => {
   return safeUser;
 };
 
-const buildWorkspacePayload = async (workspaceId) => {
+const buildWorkspacePayload = async (workspaceId, user) => {
   const [workspace] = await db
     .select()
     .from(workspaces)
@@ -33,10 +34,17 @@ const buildWorkspacePayload = async (workspaceId) => {
     .from(workspaceMembers)
     .where(eq(workspaceMembers.workspaceId, workspaceId));
 
-  const projectList = await db
+  let projectList = await db
     .select()
     .from(projects)
     .where(eq(projects.workspaceId, workspaceId));
+
+  if (user?.role !== 'ADMIN') {
+    const admin = await isWorkspaceAdmin(user.id, workspaceId);
+    if (!admin) {
+      projectList = await getProjectsForUser(user.id, workspaceId);
+    }
+  }
 
   const projectIds = projectList.map((p) => p.id);
 
@@ -108,7 +116,24 @@ const buildWorkspacePayload = async (workspaceId) => {
 
 router.get('/', async (req, res, next) => {
   try {
-    const workspaceList = await db.select().from(workspaces);
+    if (req.user.role === 'ADMIN') {
+      const workspaceList = await db.select().from(workspaces);
+      return res.json(workspaceList);
+    }
+
+    const memberships = await db
+      .select()
+      .from(workspaceMembers)
+      .where(eq(workspaceMembers.userId, req.user.id));
+
+    const workspaceIds = memberships.map((m) => m.workspaceId);
+    if (!workspaceIds.length) return res.json([]);
+
+    const workspaceList = await db
+      .select()
+      .from(workspaces)
+      .where(inArray(workspaces.id, workspaceIds));
+
     res.json(workspaceList);
   } catch (error) {
     next(error);
@@ -117,7 +142,24 @@ router.get('/', async (req, res, next) => {
 
 router.get('/:id', async (req, res, next) => {
   try {
-    const payload = await buildWorkspacePayload(req.params.id);
+    if (req.user.role !== 'ADMIN') {
+      const [membership] = await db
+        .select()
+        .from(workspaceMembers)
+        .where(
+          and(
+            eq(workspaceMembers.workspaceId, req.params.id),
+            eq(workspaceMembers.userId, req.user.id)
+          )
+        )
+        .limit(1);
+
+      if (!membership) {
+        return res.status(403).json({ message: 'Forbidden' });
+      }
+    }
+
+    const payload = await buildWorkspacePayload(req.params.id, req.user);
     if (!payload)
       return res.status(404).json({ message: 'Workspace not found' });
     res.json(payload);
@@ -156,6 +198,11 @@ router.post('/', async (req, res, next) => {
 
 router.post('/:id/members', async (req, res, next) => {
   try {
+    const admin =
+      req.user.role === 'ADMIN' ||
+      (await isWorkspaceAdmin(req.user.id, req.params.id));
+    if (!admin) return res.status(403).json({ message: 'Forbidden' });
+
     const { userId, role, message } = req.body;
     if (!userId || !role) {
       return res.status(400).json({ message: 'userId and role are required' });
@@ -171,7 +218,7 @@ router.post('/:id/members', async (req, res, next) => {
       message: message || null,
     });
 
-    const payload = await buildWorkspacePayload(req.params.id);
+    const payload = await buildWorkspacePayload(req.params.id, req.user);
     res.status(201).json(payload);
   } catch (error) {
     next(error);

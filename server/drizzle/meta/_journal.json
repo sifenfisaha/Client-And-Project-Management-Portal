@@ -15,6 +15,13 @@
       "when": 1769514836277,
       "tag": "0001_bumpy_leader",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769522236984,
+      "tag": "0002_remarkable_avengers",
+      "breakpoints": true
     }
   ]
 }

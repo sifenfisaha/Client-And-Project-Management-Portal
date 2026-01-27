@@ -118,3 +118,20 @@ export const comments = pgTable('comments', {
     .defaultNow()
     .notNull(),
 });
+
+export const invitations = pgTable('invitations', {
+  id: text('id').primaryKey(),
+  email: text('email').notNull(),
+  token: text('token').notNull(),
+  role: text('role').notNull(),
+  workspaceId: text('workspace_id')
+    .notNull()
+    .references(() => workspaces.id),
+  projectId: text('project_id').references(() => projects.id),
+  invitedBy: text('invited_by').references(() => users.id),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  acceptedAt: timestamp('accepted_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
