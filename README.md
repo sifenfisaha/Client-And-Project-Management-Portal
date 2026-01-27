@@ -24,32 +24,32 @@ End-to-end project management platform with a Vite + React client and an Express
 
 ### Getting Started
 
-1) Install dependencies
+1. Install dependencies
 
 ```
 npm install
 ```
 
-2) Start PostgreSQL
+2. Start PostgreSQL
 
 ```
 npm run db:up
 ```
 
-3) Apply migrations and seed data
+3. Apply migrations and seed data
 
 ```
 npm run db:migrate
 npm run db:seed
 ```
 
-4) Run the API
+4. Run the API
 
 ```
 npm run dev:server
 ```
 
-5) Run the client
+5. Run the client
 
 ```
 npm run dev:client
