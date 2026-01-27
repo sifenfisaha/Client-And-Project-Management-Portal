@@ -1,0 +1,181 @@
+import { Router } from 'express';
+import { and, eq, inArray } from 'drizzle-orm';
+import { db } from '../db/index.js';
+import {
+  users,
+  workspaces,
+  workspaceMembers,
+  projects,
+  projectMembers,
+  tasks,
+} from '../db/schema.js';
+import { generateId } from '../lib/ids.js';
+
+const router = Router();
+
+const stripSensitive = (user) => {
+  if (!user) return user;
+  const { password_hash, ...safeUser } = user;
+  return safeUser;
+};
+
+const buildWorkspacePayload = async (workspaceId) => {
+  const [workspace] = await db
+    .select()
+    .from(workspaces)
+    .where(eq(workspaces.id, workspaceId))
+    .limit(1);
+
+  if (!workspace) return null;
+
+  const members = await db
+    .select()
+    .from(workspaceMembers)
+    .where(eq(workspaceMembers.workspaceId, workspaceId));
+
+  const projectList = await db
+    .select()
+    .from(projects)
+    .where(eq(projects.workspaceId, workspaceId));
+
+  const projectIds = projectList.map((p) => p.id);
+
+  const projectMemberList = projectIds.length
+    ? await db
+        .select()
+        .from(projectMembers)
+        .where(inArray(projectMembers.projectId, projectIds))
+    : [];
+
+  const taskList = projectIds.length
+    ? await db.select().from(tasks).where(inArray(tasks.projectId, projectIds))
+    : [];
+
+  const userIds = new Set([
+    workspace.ownerId,
+    ...members.map((m) => m.userId),
+    ...projectList.map((p) => p.team_lead).filter(Boolean),
+    ...projectMemberList.map((m) => m.userId),
+    ...taskList.map((t) => t.assigneeId).filter(Boolean),
+  ]);
+
+  const userList = userIds.size
+    ? await db
+        .select()
+        .from(users)
+        .where(inArray(users.id, Array.from(userIds)))
+    : [];
+
+  const usersMap = Object.fromEntries(
+    userList.map((u) => [u.id, stripSensitive(u)])
+  );
+
+  const projectsWithDetails = projectList.map((project) => {
+    const projectTasks = taskList
+      .filter((task) => task.projectId === project.id)
+      .map((task) => ({
+        ...task,
+        assignee: task.assigneeId ? usersMap[task.assigneeId] : null,
+        comments: [],
+      }));
+
+    const projectMemberDetails = projectMemberList
+      .filter((member) => member.projectId === project.id)
+      .map((member) => ({
+        ...member,
+        user: usersMap[member.userId] || null,
+      }));
+
+    return {
+      ...project,
+      tasks: projectTasks,
+      members: projectMemberDetails,
+    };
+  });
+
+  const memberDetails = members.map((member) => ({
+    ...member,
+    user: usersMap[member.userId] || null,
+  }));
+
+  return {
+    ...workspace,
+    owner: usersMap[workspace.ownerId] || null,
+    members: memberDetails,
+    projects: projectsWithDetails,
+  };
+};
+
+router.get('/', async (req, res, next) => {
+  try {
+    const workspaceList = await db.select().from(workspaces);
+    res.json(workspaceList);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/:id', async (req, res, next) => {
+  try {
+    const payload = await buildWorkspacePayload(req.params.id);
+    if (!payload)
+      return res.status(404).json({ message: 'Workspace not found' });
+    res.json(payload);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/', async (req, res, next) => {
+  try {
+    const { name, slug, ownerId, description, image_url } = req.body;
+
+    if (!name || !slug || !ownerId) {
+      return res
+        .status(400)
+        .json({ message: 'name, slug, and ownerId are required' });
+    }
+
+    const workspaceId = generateId('org');
+
+    await db.insert(workspaces).values({
+      id: workspaceId,
+      name,
+      slug,
+      ownerId,
+      description: description || null,
+      image_url: image_url || null,
+    });
+
+    const payload = await buildWorkspacePayload(workspaceId);
+    res.status(201).json(payload);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/:id/members', async (req, res, next) => {
+  try {
+    const { userId, role, message } = req.body;
+    if (!userId || !role) {
+      return res.status(400).json({ message: 'userId and role are required' });
+    }
+
+    const memberId = generateId('wm');
+
+    await db.insert(workspaceMembers).values({
+      id: memberId,
+      workspaceId: req.params.id,
+      userId,
+      role,
+      message: message || null,
+    });
+
+    const payload = await buildWorkspacePayload(req.params.id);
+    res.status(201).json(payload);
+  } catch (error) {
+    next(error);
+  }
+});
+
+export default router;
