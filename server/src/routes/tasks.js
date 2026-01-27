@@ -1,8 +1,15 @@
 import { Router } from 'express';
-import { eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { comments, tasks, users } from '../db/schema.js';
+import {
+  comments,
+  projectMembers,
+  projects,
+  tasks,
+  users,
+} from '../db/schema.js';
 import { generateId } from '../lib/ids.js';
+import { isWorkspaceAdmin } from '../lib/permissions.js';
 
 const router = Router();
 
@@ -22,6 +29,33 @@ router.get('/:id', async (req, res, next) => {
 
     if (!task) return res.status(404).json({ message: 'Task not found' });
 
+    if (req.user.role !== 'ADMIN') {
+      const [project] = await db
+        .select()
+        .from(projects)
+        .where(eq(projects.id, task.projectId))
+        .limit(1);
+
+      if (!project)
+        return res.status(404).json({ message: 'Project not found' });
+
+      const admin = await isWorkspaceAdmin(req.user.id, project.workspaceId);
+      if (!admin) {
+        const [membership] = await db
+          .select()
+          .from(projectMembers)
+          .where(
+            and(
+              eq(projectMembers.projectId, task.projectId),
+              eq(projectMembers.userId, req.user.id)
+            )
+          )
+          .limit(1);
+
+        if (!membership) return res.status(403).json({ message: 'Forbidden' });
+      }
+    }
+
     res.json(task);
   } catch (error) {
     next(error);
@@ -30,6 +64,41 @@ router.get('/:id', async (req, res, next) => {
 
 router.patch('/:id', async (req, res, next) => {
   try {
+    const [task] = await db
+      .select()
+      .from(tasks)
+      .where(eq(tasks.id, req.params.id))
+      .limit(1);
+
+    if (!task) return res.status(404).json({ message: 'Task not found' });
+
+    if (req.user.role !== 'ADMIN') {
+      const [project] = await db
+        .select()
+        .from(projects)
+        .where(eq(projects.id, task.projectId))
+        .limit(1);
+
+      if (!project)
+        return res.status(404).json({ message: 'Project not found' });
+
+      const admin = await isWorkspaceAdmin(req.user.id, project.workspaceId);
+      if (!admin) {
+        const [membership] = await db
+          .select()
+          .from(projectMembers)
+          .where(
+            and(
+              eq(projectMembers.projectId, task.projectId),
+              eq(projectMembers.userId, req.user.id)
+            )
+          )
+          .limit(1);
+
+        if (!membership) return res.status(403).json({ message: 'Forbidden' });
+      }
+    }
+
     const updates = req.body;
     if (updates.due_date) updates.due_date = new Date(updates.due_date);
     updates.updatedAt = new Date();
@@ -49,6 +118,41 @@ router.patch('/:id', async (req, res, next) => {
 
 router.delete('/:id', async (req, res, next) => {
   try {
+    const [task] = await db
+      .select()
+      .from(tasks)
+      .where(eq(tasks.id, req.params.id))
+      .limit(1);
+
+    if (!task) return res.status(404).json({ message: 'Task not found' });
+
+    if (req.user.role !== 'ADMIN') {
+      const [project] = await db
+        .select()
+        .from(projects)
+        .where(eq(projects.id, task.projectId))
+        .limit(1);
+
+      if (!project)
+        return res.status(404).json({ message: 'Project not found' });
+
+      const admin = await isWorkspaceAdmin(req.user.id, project.workspaceId);
+      if (!admin) {
+        const [membership] = await db
+          .select()
+          .from(projectMembers)
+          .where(
+            and(
+              eq(projectMembers.projectId, task.projectId),
+              eq(projectMembers.userId, req.user.id)
+            )
+          )
+          .limit(1);
+
+        if (!membership) return res.status(403).json({ message: 'Forbidden' });
+      }
+    }
+
     await db.delete(tasks).where(eq(tasks.id, req.params.id));
     res.status(204).send();
   } catch (error) {
@@ -58,6 +162,41 @@ router.delete('/:id', async (req, res, next) => {
 
 router.get('/:id/comments', async (req, res, next) => {
   try {
+    const [task] = await db
+      .select()
+      .from(tasks)
+      .where(eq(tasks.id, req.params.id))
+      .limit(1);
+
+    if (!task) return res.status(404).json({ message: 'Task not found' });
+
+    if (req.user.role !== 'ADMIN') {
+      const [project] = await db
+        .select()
+        .from(projects)
+        .where(eq(projects.id, task.projectId))
+        .limit(1);
+
+      if (!project)
+        return res.status(404).json({ message: 'Project not found' });
+
+      const admin = await isWorkspaceAdmin(req.user.id, project.workspaceId);
+      if (!admin) {
+        const [membership] = await db
+          .select()
+          .from(projectMembers)
+          .where(
+            and(
+              eq(projectMembers.projectId, task.projectId),
+              eq(projectMembers.userId, req.user.id)
+            )
+          )
+          .limit(1);
+
+        if (!membership) return res.status(403).json({ message: 'Forbidden' });
+      }
+    }
+
     const taskComments = await db
       .select()
       .from(comments)
@@ -84,6 +223,41 @@ router.get('/:id/comments', async (req, res, next) => {
 
 router.post('/:id/comments', async (req, res, next) => {
   try {
+    const [task] = await db
+      .select()
+      .from(tasks)
+      .where(eq(tasks.id, req.params.id))
+      .limit(1);
+
+    if (!task) return res.status(404).json({ message: 'Task not found' });
+
+    if (req.user.role !== 'ADMIN') {
+      const [project] = await db
+        .select()
+        .from(projects)
+        .where(eq(projects.id, task.projectId))
+        .limit(1);
+
+      if (!project)
+        return res.status(404).json({ message: 'Project not found' });
+
+      const admin = await isWorkspaceAdmin(req.user.id, project.workspaceId);
+      if (!admin) {
+        const [membership] = await db
+          .select()
+          .from(projectMembers)
+          .where(
+            and(
+              eq(projectMembers.projectId, task.projectId),
+              eq(projectMembers.userId, req.user.id)
+            )
+          )
+          .limit(1);
+
+        if (!membership) return res.status(403).json({ message: 'Forbidden' });
+      }
+    }
+
     const { userId, content } = req.body;
     if (!userId || !content) {
       return res
