@@ -1,0 +1,69 @@
+import { apiFetch } from './client';
+
+export const login = async (payload) =>
+  apiFetch('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+export const fetchWorkspaces = async () => apiFetch('/api/workspaces');
+
+export const fetchWorkspaceById = async (id) =>
+  apiFetch(`/api/workspaces/${id}`);
+
+export const createProject = async (payload) =>
+  apiFetch('/api/projects', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+export const updateProject = async (id, payload) =>
+  apiFetch(`/api/projects/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+
+export const createTask = async (projectId, payload) =>
+  apiFetch(`/api/projects/${projectId}/tasks`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+export const updateTask = async (taskId, payload) =>
+  apiFetch(`/api/tasks/${taskId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+
+export const deleteTask = async (taskId) =>
+  apiFetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+
+export const fetchTaskComments = async (taskId) =>
+  apiFetch(`/api/tasks/${taskId}/comments`);
+
+export const addTaskComment = async (taskId, payload) =>
+  apiFetch(`/api/tasks/${taskId}/comments`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+export const fetchUserByEmail = async (email) =>
+  apiFetch(`/api/users?email=${encodeURIComponent(email)}`);
+
+export const createUser = async (payload) =>
+  apiFetch('/api/users', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+export const addWorkspaceMember = async (workspaceId, payload) =>
+  apiFetch(`/api/workspaces/${workspaceId}/members`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+export const addProjectMember = async (projectId, payload) =>
+  apiFetch(`/api/projects/${projectId}/members`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
