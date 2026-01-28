@@ -14,7 +14,7 @@ import {
   XIcon,
   Zap,
 } from 'lucide-react';
-import { assets } from '../assets/assets';
+import Avatar from './Avatar';
 
 const typeIcons = {
   BUG: { icon: Bug, color: 'text-red-600 dark:text-red-400' },
@@ -307,12 +307,11 @@ const ProjectTasks = ({ tasks }) => {
                         </td>
                         <td className="px-4 py-2">
                           <div className="flex items-center gap-2">
-                            <img
-                              src={
-                                resolvedAssignee?.image || assets.profile_img_a
-                              }
+                            <Avatar
+                              src={resolvedAssignee?.image}
+                              name={resolvedAssignee?.name}
+                              email={resolvedAssignee?.email}
                               className="size-5 rounded-full"
-                              alt="avatar"
                             />
                             {resolvedAssignee?.name ||
                               resolvedAssignee?.email ||
@@ -408,10 +407,11 @@ const ProjectTasks = ({ tasks }) => {
                       </select>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
-                      <img
-                        src={resolvedAssignee?.image || assets.profile_img_a}
+                      <Avatar
+                        src={resolvedAssignee?.image}
+                        name={resolvedAssignee?.name}
+                        email={resolvedAssignee?.email}
                         className="size-5 rounded-full"
-                        alt="avatar"
                       />
                       <div className="flex flex-col">
                         <span className="text-xs font-medium">

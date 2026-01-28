@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { CalendarIcon, MessageCircle, PenIcon } from 'lucide-react';
-import { assets } from '../assets/assets';
+import Avatar from '../components/Avatar';
 import { useWorkspaceContext } from '../context/workspaceContext';
 import { useProject, useTask, useTaskComments } from '../hooks/useQueries';
 import { useAddTaskComment } from '../hooks/useMutations';
@@ -88,9 +88,10 @@ const TaskDetails = () => {
                     className={`sm:max-w-4/5 dark:bg-linear-to-br dark:from-zinc-800 dark:to-zinc-900 border border-gray-300 dark:border-zinc-700 p-3 rounded-md ${comment.user?.id === user?.id ? 'ml-auto' : 'mr-auto'}`}
                   >
                     <div className="flex items-center gap-2 mb-1 text-sm text-gray-500 dark:text-zinc-400">
-                      <img
-                        src={comment.user?.image || assets.profile_img_a}
-                        alt="avatar"
+                      <Avatar
+                        src={comment.user?.image}
+                        name={comment.user?.name}
+                        email={comment.user?.email}
                         className="size-5 rounded-full"
                       />
                       <span className="font-medium text-gray-900 dark:text-white">
@@ -167,10 +168,11 @@ const TaskDetails = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-zinc-300">
             <div className="flex items-center gap-2">
-              <img
-                src={resolvedAssignee?.image || assets.profile_img_a}
+              <Avatar
+                src={resolvedAssignee?.image}
+                name={resolvedAssignee?.name}
+                email={resolvedAssignee?.email}
                 className="size-5 rounded-full"
-                alt="avatar"
               />
               {resolvedAssignee?.name ||
                 resolvedAssignee?.email ||

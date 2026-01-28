@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { UsersIcon, Search, UserPlus, Shield, Activity } from 'lucide-react';
 import InviteMemberDialog from '../components/InviteMemberDialog';
 import { useSelector } from 'react-redux';
-import { assets } from '../assets/assets';
+import Avatar from '../components/Avatar';
 import { useWorkspaceContext } from '../context/workspaceContext';
 
 const Team = () => {
@@ -185,9 +185,10 @@ const Team = () => {
                       className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors"
                     >
                       <td className="px-6 py-2.5 whitespace-nowrap flex items-center gap-3">
-                        <img
-                          src={user.user.image || assets.profile_img_a}
-                          alt={user.user.name}
+                        <Avatar
+                          src={user.user.image}
+                          name={user.user.name}
+                          email={user.user.email}
                           className="size-7 rounded-full bg-gray-200 dark:bg-zinc-800"
                         />
                         <span className="text-sm text-zinc-800 dark:text-white truncate">
@@ -222,9 +223,10 @@ const Team = () => {
                   className="p-4 border border-gray-200 dark:border-zinc-800 rounded-md bg-white dark:bg-zinc-900"
                 >
                   <div className="flex items-center gap-3 mb-2">
-                    <img
-                      src={user.user.image || assets.profile_img_a}
-                      alt={user.user.name}
+                    <Avatar
+                      src={user.user.image}
+                      name={user.user.name}
+                      email={user.user.email}
                       className="size-9 rounded-full bg-gray-200 dark:bg-zinc-800"
                     />
                     <div>

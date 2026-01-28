@@ -2,7 +2,7 @@ import { SearchIcon, PanelLeft } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toggleTheme } from '../features/themeSlice';
 import { MoonIcon, SunIcon } from 'lucide-react';
-import { assets } from '../assets/assets';
+import Avatar from './Avatar';
 import { logout } from '../features/authSlice';
 
 const Navbar = ({ setIsSidebarOpen }) => {
@@ -57,9 +57,10 @@ const Navbar = ({ setIsSidebarOpen }) => {
                 {user?.role || 'USER'}
               </span>
             </div>
-            <img
-              src={user?.image || assets.profile_img_a}
-              alt="User Avatar"
+            <Avatar
+              src={user?.image}
+              name={user?.name}
+              email={user?.email}
               className="size-7 rounded-full"
             />
             <button
