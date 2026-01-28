@@ -346,6 +346,28 @@ router.post('/:id/tasks', async (req, res, next) => {
       updatedAt: new Date(),
     });
 
+    if (assigneeId) {
+      const [existingMember] = await db
+        .select()
+        .from(projectMembers)
+        .where(
+          and(
+            eq(projectMembers.projectId, req.params.id),
+            eq(projectMembers.userId, assigneeId)
+          )
+        )
+        .limit(1);
+
+      if (!existingMember) {
+        const memberId = generateId('pm');
+        await db.insert(projectMembers).values({
+          id: memberId,
+          projectId: req.params.id,
+          userId: assigneeId,
+        });
+      }
+    }
+
     const [created] = await db.select().from(tasks).where(eq(tasks.id, taskId));
     res.status(201).json(created);
   } catch (error) {

@@ -161,7 +161,7 @@ const ProjectTasks = ({ tasks }) => {
               key={name}
               name={name}
               onChange={handleFilterChange}
-              className=" border not-dark:bg-white border-zinc-300 dark:border-zinc-800 outline-none px-3 py-1 rounded text-sm text-zinc-900 dark:text-zinc-200"
+              className="border bg-white dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 outline-none px-3 py-1 rounded text-sm text-zinc-900 dark:text-zinc-100"
             >
               {options[name].map((opt, idx) => (
                 <option key={idx} value={opt.value}>
