@@ -103,6 +103,28 @@ router.patch('/:id', async (req, res, next) => {
     if (updates.due_date) updates.due_date = new Date(updates.due_date);
     updates.updatedAt = new Date();
 
+    if (updates.assigneeId) {
+      const [existingMember] = await db
+        .select()
+        .from(projectMembers)
+        .where(
+          and(
+            eq(projectMembers.projectId, task.projectId),
+            eq(projectMembers.userId, updates.assigneeId)
+          )
+        )
+        .limit(1);
+
+      if (!existingMember) {
+        const memberId = generateId('pm');
+        await db.insert(projectMembers).values({
+          id: memberId,
+          projectId: task.projectId,
+          userId: updates.assigneeId,
+        });
+      }
+    }
+
     await db.update(tasks).set(updates).where(eq(tasks.id, req.params.id));
 
     const [updated] = await db
