@@ -21,13 +21,13 @@ export default function ProjectSettings({ project }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
+  const currentWorkspace = useSelector(
+    (state) => state.workspace.currentWorkspace
+  );
   const memberRole = currentWorkspace?.members?.find(
     (m) => m.user.id === user?.id
   )?.role;
   const isAdmin = user?.role === 'ADMIN' || memberRole === 'ADMIN';
-  const currentWorkspace = useSelector(
-    (state) => state.workspace.currentWorkspace
-  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
