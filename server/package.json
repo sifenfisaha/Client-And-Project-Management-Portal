@@ -8,13 +8,14 @@
     "start": "node src/index.js",
     "db:generate": "drizzle-kit generate --config drizzle.config.cjs",
     "db:migrate": "drizzle-kit migrate --config drizzle.config.cjs",
-    "db:seed": "node src/seed.js"
+    "db:seed": "node src/seed.js",
+    "db:studio": "drizzle-kit studio --config drizzle.config.cjs"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "drizzle-orm": "^0.36.3",
+    "drizzle-orm": "^0.38.1",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.11.5",
