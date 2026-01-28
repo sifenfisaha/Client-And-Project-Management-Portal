@@ -5,7 +5,12 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { CalendarIcon, MessageCircle, PenIcon } from 'lucide-react';
 import { assets } from '../assets/assets';
-import { addTaskComment, fetchTaskComments } from '../api';
+import {
+  addTaskComment,
+  fetchProjectById,
+  fetchTaskById,
+  fetchTaskComments,
+} from '../api';
 
 const TaskDetails = () => {
   const [searchParams] = useSearchParams();
@@ -33,17 +38,43 @@ const TaskDetails = () => {
 
   const fetchTaskDetails = async () => {
     setLoading(true);
-    if (!projectId || !taskId) return;
+    if (!projectId || !taskId) {
+      setTask(null);
+      setProject(null);
+      setLoading(false);
+      return;
+    }
 
-    const proj = currentWorkspace.projects.find((p) => p.id === projectId);
-    if (!proj) return;
+    const localProject = currentWorkspace?.projects?.find(
+      (p) => p.id === projectId
+    );
+    const localTask = localProject?.tasks?.find((t) => t.id === taskId);
 
-    const tsk = proj.tasks.find((t) => t.id === taskId);
-    if (!tsk) return;
+    if (localProject && localTask) {
+      setTask(localTask);
+      setProject(localProject);
+      setLoading(false);
+      return;
+    }
 
-    setTask(tsk);
-    setProject(proj);
-    setLoading(false);
+    try {
+      const [projectData, taskData] = await Promise.all([
+        fetchProjectById(projectId),
+        fetchTaskById(taskId),
+      ]);
+
+      const remoteTask =
+        projectData?.tasks?.find((t) => t.id === taskId) || taskData || null;
+
+      setProject(projectData || null);
+      setTask(remoteTask);
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      setTask(null);
+      setProject(null);
+      setLoading(false);
+    }
   };
 
   const handleAddComment = async () => {
@@ -72,7 +103,7 @@ const TaskDetails = () => {
 
   useEffect(() => {
     fetchTaskDetails();
-  }, [taskId]);
+  }, [taskId, projectId, currentWorkspace]);
 
   useEffect(() => {
     if (taskId && task) {

@@ -31,11 +31,11 @@ function MyTasksSidebar() {
 
   const fetchUserTasks = () => {
     const userId = user?.id || '';
-    if (!userId || !currentWorkspace) return;
-    const currentWorkspaceTasks = currentWorkspace.projects.flatMap(
-      (project) => {
-        return project.tasks.filter((task) => task?.assignee?.id === userId);
-      }
+    if (!userId || !currentWorkspace?.projects) return;
+    const currentWorkspaceTasks = currentWorkspace.projects.flatMap((project) =>
+      project.tasks.filter(
+        (task) => task?.assignee?.id === userId || task?.assigneeId === userId
+      )
     );
 
     setMyTasks(currentWorkspaceTasks);
@@ -43,7 +43,7 @@ function MyTasksSidebar() {
 
   useEffect(() => {
     fetchUserTasks();
-  }, [currentWorkspace]);
+  }, [currentWorkspace, user]);
 
   return (
     <div className="mt-6 px-3">

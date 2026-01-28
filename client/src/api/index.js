@@ -55,6 +55,8 @@ export const deleteTask = async (taskId) =>
 export const fetchTaskComments = async (taskId) =>
   apiFetch(`/api/tasks/${taskId}/comments`);
 
+export const fetchTaskById = async (taskId) => apiFetch(`/api/tasks/${taskId}`);
+
 export const addTaskComment = async (taskId, payload) =>
   apiFetch(`/api/tasks/${taskId}/comments`, {
     method: 'POST',
