@@ -116,7 +116,18 @@ const buildWorkspacePayload = async (workspaceId, user) => {
 
 router.get('/', async (req, res, next) => {
   try {
-    if (req.user.role === 'ADMIN') {
+    const adminMemberships = await db
+      .select()
+      .from(workspaceMembers)
+      .where(
+        and(
+          eq(workspaceMembers.userId, req.user.id),
+          eq(workspaceMembers.role, 'ADMIN')
+        )
+      );
+
+    const canViewAll = adminMemberships.length > 0;
+    if (canViewAll) {
       const workspaceList = await db.select().from(workspaces);
       const workspaceIds = workspaceList.map((w) => w.id);
       const memberList = workspaceIds.length
