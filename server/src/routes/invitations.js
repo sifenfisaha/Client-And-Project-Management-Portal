@@ -2,7 +2,7 @@ import { Router } from 'express';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { Resend } from 'resend';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import {
   invitations,
@@ -48,11 +48,18 @@ router.get('/lookup', async (req, res, next) => {
       return res.status(400).json({ message: 'Invite expired' });
     }
 
+    const [existingUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, invite.email))
+      .limit(1);
+
     res.json({
       email: invite.email,
       role: invite.role,
       workspaceId: invite.workspaceId,
       projectId: invite.projectId,
+      userExists: Boolean(existingUser?.id),
     });
   } catch (error) {
     next(error);
@@ -128,10 +135,8 @@ router.post('/', requireAuth, async (req, res, next) => {
 router.post('/accept', async (req, res, next) => {
   try {
     const { token, password, name } = req.body;
-    if (!token || !password) {
-      return res
-        .status(400)
-        .json({ message: 'token and password are required' });
+    if (!token) {
+      return res.status(400).json({ message: 'token is required' });
     }
 
     const [invite] = await db
@@ -157,14 +162,12 @@ router.post('/accept', async (req, res, next) => {
 
     let userId = existingUser?.id;
 
-    if (existingUser?.password_hash) {
-      return res.status(400).json({ message: 'Account already exists' });
-    }
-
-    const passwordHash = await bcrypt.hash(password, 10);
-    const finalRole = invite.role === 'ADMIN' ? 'ADMIN' : 'USER';
-
     if (!existingUser) {
+      if (!password) {
+        return res.status(400).json({ message: 'password is required' });
+      }
+      const passwordHash = await bcrypt.hash(password, 10);
+      const finalRole = invite.role === 'ADMIN' ? 'ADMIN' : 'USER';
       userId = generateId('user');
       await db.insert(users).values({
         id: userId,
@@ -173,29 +176,69 @@ router.post('/accept', async (req, res, next) => {
         password_hash: passwordHash,
         role: finalRole,
       });
-    } else {
+    } else if (!existingUser.password_hash && password) {
+      const passwordHash = await bcrypt.hash(password, 10);
       await db
         .update(users)
-        .set({ password_hash: passwordHash, role: finalRole })
+        .set({ password_hash: passwordHash })
         .where(eq(users.id, existingUser.id));
+    } else if (existingUser.password_hash && password) {
+      const isValid = await bcrypt.compare(
+        password,
+        existingUser.password_hash
+      );
+      if (!isValid) {
+        return res.status(400).json({ message: 'Invalid credentials' });
+      }
     }
 
-    const memberId = generateId('wm');
-    await db.insert(workspaceMembers).values({
-      id: memberId,
-      workspaceId: invite.workspaceId,
-      userId,
-      role: invite.role,
-      message: '',
-    });
+    const [existingMembership] = await db
+      .select()
+      .from(workspaceMembers)
+      .where(
+        and(
+          eq(workspaceMembers.workspaceId, invite.workspaceId),
+          eq(workspaceMembers.userId, userId)
+        )
+      )
+      .limit(1);
+
+    if (!existingMembership) {
+      const memberId = generateId('wm');
+      await db.insert(workspaceMembers).values({
+        id: memberId,
+        workspaceId: invite.workspaceId,
+        userId,
+        role: invite.role,
+        message: '',
+      });
+    } else if (existingMembership.role !== invite.role) {
+      await db
+        .update(workspaceMembers)
+        .set({ role: invite.role })
+        .where(eq(workspaceMembers.id, existingMembership.id));
+    }
 
     if (invite.projectId) {
-      const projectMemberId = generateId('pm');
-      await db.insert(projectMembers).values({
-        id: projectMemberId,
-        projectId: invite.projectId,
-        userId,
-      });
+      const [existingProjectMember] = await db
+        .select()
+        .from(projectMembers)
+        .where(
+          and(
+            eq(projectMembers.projectId, invite.projectId),
+            eq(projectMembers.userId, userId)
+          )
+        )
+        .limit(1);
+
+      if (!existingProjectMember) {
+        const projectMemberId = generateId('pm');
+        await db.insert(projectMembers).values({
+          id: projectMemberId,
+          projectId: invite.projectId,
+          userId,
+        });
+      }
     }
 
     await db
@@ -206,6 +249,10 @@ router.post('/accept', async (req, res, next) => {
     const [user] = await db.select().from(users).where(eq(users.id, userId));
     const safeUser = stripSensitive(user);
 
+    if (existingUser?.id) {
+      return res.json({ existingUser: true, user: safeUser });
+    }
+
     const jwt = (await import('jsonwebtoken')).default;
     const tokenValue = jwt.sign(
       { sub: safeUser.id, email: safeUser.email, role: safeUser.role },
@@ -213,7 +260,32 @@ router.post('/accept', async (req, res, next) => {
       { expiresIn: '7d' }
     );
 
-    res.json({ token: tokenValue, user: safeUser });
+    return res.json({ token: tokenValue, user: safeUser });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/decline', async (req, res, next) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ message: 'token is required' });
+    }
+
+    const [invite] = await db
+      .select()
+      .from(invitations)
+      .where(eq(invitations.token, token))
+      .limit(1);
+
+    if (!invite) return res.status(404).json({ message: 'Invite not found' });
+    if (invite.acceptedAt) {
+      return res.status(400).json({ message: 'Invite already accepted' });
+    }
+
+    await db.delete(invitations).where(eq(invitations.id, invite.id));
+    return res.json({ message: 'Invitation declined' });
   } catch (error) {
     next(error);
   }
