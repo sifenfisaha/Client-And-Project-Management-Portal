@@ -72,7 +72,7 @@ export default function Projects() {
           <>
             <button
               onClick={() => setIsDialogOpen(true)}
-              className="flex items-center px-5 py-2 text-sm rounded bg-linear-to-br from-blue-500 to-blue-600 text-white hover:opacity-90 transition"
+              className="flex items-center justify-center px-5 py-2 text-sm rounded bg-linear-to-br from-blue-500 to-blue-600 text-white hover:opacity-90 transition w-full sm:w-auto"
             >
               <Plus className="size-4 mr-2" /> New Project
             </button>
@@ -86,7 +86,7 @@ export default function Projects() {
 
       {/* Search and Filters */}
       <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative w-full max-w-sm">
+        <div className="relative w-full md:max-w-sm">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-zinc-400 w-4 h-4" />
           <input
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -98,7 +98,7 @@ export default function Projects() {
         <select
           value={filters.status}
           onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-          className="px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-700 text-gray-900 dark:text-white text-sm"
+          className="px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-700 text-gray-900 dark:text-white text-sm w-full md:w-auto"
         >
           <option value="ALL">All Status</option>
           <option value="ACTIVE">Active</option>
@@ -110,7 +110,7 @@ export default function Projects() {
         <select
           value={filters.priority}
           onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
-          className="px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-700 text-gray-900 dark:text-white text-sm"
+          className="px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-700 text-gray-900 dark:text-white text-sm w-full md:w-auto"
         >
           <option value="ALL">All Priority</option>
           <option value="HIGH">High</option>

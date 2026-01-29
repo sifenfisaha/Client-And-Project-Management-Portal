@@ -35,7 +35,7 @@ const Dashboard = () => {
           <>
             <button
               onClick={() => setIsDialogOpen(true)}
-              className="flex items-center gap-2 px-5 py-2 text-sm rounded bg-linear-to-br from-blue-500 to-blue-600 text-white space-x-2 hover:opacity-90 transition"
+              className="flex items-center justify-center gap-2 px-5 py-2 text-sm rounded bg-linear-to-br from-blue-500 to-blue-600 text-white space-x-2 hover:opacity-90 transition w-full sm:w-auto"
             >
               <Plus size={16} /> New Project
             </button>
