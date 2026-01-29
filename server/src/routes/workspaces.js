@@ -9,6 +9,9 @@ import {
   projectMembers,
   tasks,
   clients,
+  comments,
+  invitations,
+  clientIntakes,
 } from '../db/schema.js';
 import { generateId } from '../lib/ids.js';
 import { getProjectsForUser, isWorkspaceAdmin } from '../lib/permissions.js';
@@ -19,6 +22,24 @@ const stripSensitive = (user) => {
   if (!user) return user;
   const { password_hash, ...safeUser } = user;
   return safeUser;
+};
+
+const getUniqueWorkspaceSlug = async (rawSlug) => {
+  const base = rawSlug.trim().toLowerCase();
+  let candidate = base;
+  let counter = 1;
+
+  while (true) {
+    const [existing] = await db
+      .select({ id: workspaces.id })
+      .from(workspaces)
+      .where(eq(workspaces.slug, candidate))
+      .limit(1);
+
+    if (!existing) return candidate;
+    counter += 1;
+    candidate = `${base}-${counter}`;
+  }
 };
 
 const buildWorkspacePayload = async (workspaceId, user) => {
@@ -230,7 +251,7 @@ router.post('/', async (req, res, next) => {
   try {
     const { name, slug, ownerId, description, image_url } = req.body;
 
-    if (!name || !slug || !ownerId) {
+    if (!name || !slug || !ownerId || !slug.trim()) {
       return res
         .status(400)
         .json({ message: 'name, slug, and ownerId are required' });
@@ -238,11 +259,12 @@ router.post('/', async (req, res, next) => {
 
     const workspaceId = generateId('org');
     const memberId = generateId('wm');
+    const uniqueSlug = await getUniqueWorkspaceSlug(slug);
 
     await db.insert(workspaces).values({
       id: workspaceId,
       name,
-      slug,
+      slug: uniqueSlug,
       ownerId,
       description: description || null,
       image_url: image_url || null,
@@ -256,7 +278,7 @@ router.post('/', async (req, res, next) => {
       message: null,
     });
 
-    const payload = await buildWorkspacePayload(workspaceId);
+    const payload = await buildWorkspacePayload(workspaceId, req.user);
     res.status(201).json(payload);
   } catch (error) {
     next(error);
@@ -289,6 +311,57 @@ router.patch('/:id', async (req, res, next) => {
     if (!payload)
       return res.status(404).json({ message: 'Workspace not found' });
     res.json(payload);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const admin =
+      req.user.role === 'ADMIN' ||
+      (await isWorkspaceAdmin(req.user.id, req.params.id));
+    if (!admin) return res.status(403).json({ message: 'Forbidden' });
+
+    const projectList = await db
+      .select({ id: projects.id })
+      .from(projects)
+      .where(eq(projects.workspaceId, req.params.id));
+    const projectIds = projectList.map((p) => p.id);
+
+    const taskList = projectIds.length
+      ? await db
+          .select({ id: tasks.id })
+          .from(tasks)
+          .where(inArray(tasks.projectId, projectIds))
+      : [];
+    const taskIds = taskList.map((t) => t.id);
+
+    if (taskIds.length) {
+      await db.delete(comments).where(inArray(comments.taskId, taskIds));
+    }
+
+    if (projectIds.length) {
+      await db
+        .delete(projectMembers)
+        .where(inArray(projectMembers.projectId, projectIds));
+      await db.delete(tasks).where(inArray(tasks.projectId, projectIds));
+    }
+
+    await db
+      .delete(invitations)
+      .where(eq(invitations.workspaceId, req.params.id));
+    await db
+      .delete(clientIntakes)
+      .where(eq(clientIntakes.workspaceId, req.params.id));
+    await db.delete(clients).where(eq(clients.workspaceId, req.params.id));
+    await db
+      .delete(workspaceMembers)
+      .where(eq(workspaceMembers.workspaceId, req.params.id));
+    await db.delete(projects).where(eq(projects.workspaceId, req.params.id));
+    await db.delete(workspaces).where(eq(workspaces.id, req.params.id));
+
+    res.status(204).send();
   } catch (error) {
     next(error);
   }

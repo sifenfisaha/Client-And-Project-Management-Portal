@@ -20,6 +20,7 @@ import {
   updateTask,
   updateUser,
   updateWorkspace,
+  deleteWorkspace,
 } from '../api';
 import {
   clientKeys,
@@ -54,6 +55,16 @@ export const useUpdateWorkspace = () => {
       queryClient.invalidateQueries({
         queryKey: workspaceKeys.detail(variables.workspaceId),
       });
+    },
+  });
+};
+
+export const useDeleteWorkspace = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ workspaceId }) => deleteWorkspace(workspaceId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: workspaceKeys.all });
     },
   });
 };
