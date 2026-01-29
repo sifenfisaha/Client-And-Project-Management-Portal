@@ -61,7 +61,7 @@ const Team = () => {
           <>
             <button
               onClick={() => setIsDialogOpen(true)}
-              className="flex items-center px-5 py-2 rounded text-sm bg-linear-to-br from-blue-500 to-blue-600 hover:opacity-90 text-white transition"
+              className="flex items-center justify-center px-5 py-2 rounded text-sm bg-linear-to-br from-blue-500 to-blue-600 hover:opacity-90 text-white transition w-full sm:w-auto"
             >
               <UserPlus className="w-4 h-4 mr-2" /> Invite Member
             </button>
@@ -132,7 +132,7 @@ const Team = () => {
       </div>
 
       {/* Search */}
-      <div className="relative max-w-md">
+      <div className="relative w-full md:max-w-md">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-zinc-400 size-3" />
         <input
           placeholder="Search team members..."
