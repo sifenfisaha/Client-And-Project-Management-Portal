@@ -1,6 +1,8 @@
 const getAuthToken = () => localStorage.getItem('authToken');
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 export const apiFetch = async (path, options = {}) => {
+  console.log(API_BASE_URL);
   const headers = {
     'Content-Type': 'application/json',
     ...(options.headers || {}),
@@ -9,7 +11,9 @@ export const apiFetch = async (path, options = {}) => {
   const token = getAuthToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const response = await fetch(path, {
+  const url = `${API_BASE_URL}${path}`;
+
+  const response = await fetch(url, {
     ...options,
     headers,
   });
