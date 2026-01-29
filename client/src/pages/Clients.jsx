@@ -1,12 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Filter, Link as LinkIcon, Plus, X } from 'lucide-react';
+import { Link as LinkIcon, Plus, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useSelector } from 'react-redux';
 import { useWorkspaceContext } from '../context/workspaceContext';
 import { useClientIntakes, useClients } from '../hooks/useQueries';
 import { useCreateClient, useCreateClientIntake } from '../hooks/useMutations';
 import CreateProjectDialog from '../components/CreateProjectDialog';
-import SearchPopover from '../components/SearchPopover';
 
 const initialClientForm = {
   name: '',
@@ -28,7 +27,7 @@ const initialClientForm = {
 };
 
 const Clients = () => {
-  const { currentWorkspace } = useWorkspaceContext();
+  const { currentWorkspace, searchQuery } = useWorkspaceContext();
   const user = useSelector((state) => state.auth.user);
   const memberRole = currentWorkspace?.members?.find(
     (m) => m.user.id === user?.id
@@ -41,7 +40,6 @@ const Clients = () => {
   const [showProjectDialog, setShowProjectDialog] = useState(false);
   const [selectedDetails, setSelectedDetails] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [sortBy, setSortBy] = useState('name-asc');
 
@@ -57,7 +55,7 @@ const Clients = () => {
   );
 
   const filteredClients = useMemo(() => {
-    const normalized = searchTerm.trim().toLowerCase();
+    const normalized = searchQuery.trim().toLowerCase();
     let list = [...clients];
 
     if (statusFilter !== 'ALL') {
@@ -97,7 +95,7 @@ const Clients = () => {
     }
 
     return list;
-  }, [clients, searchTerm, statusFilter, sortBy]);
+  }, [clients, searchQuery, statusFilter, sortBy]);
 
   const handleCreateClient = async (event) => {
     event.preventDefault();
@@ -207,7 +205,6 @@ const Clients = () => {
   };
 
   const clearFilters = () => {
-    setSearchTerm('');
     setStatusFilter('ALL');
     setSortBy('name-asc');
   };
@@ -499,30 +496,25 @@ const Clients = () => {
       )}
 
       <div className="flex flex-col lg:flex-row gap-3 lg:items-center">
-        <SearchPopover
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search clients"
-        />
-        <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full">
-          <div className="flex items-center gap-2 px-3 py-2 rounded border border-zinc-300 dark:border-zinc-700 text-sm w-full sm:w-auto">
-            <Filter className="size-4 text-zinc-500" />
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full">
+          <div className="flex flex-col gap-1 w-full sm:w-auto">
+            <span className="text-xs font-medium text-zinc-500">Status</span>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-transparent outline-none w-full sm:w-auto"
+              className="w-full sm:w-48 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm text-zinc-900 dark:text-white shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="ALL">All Status</option>
               <option value="ACTIVE">Active</option>
               <option value="INACTIVE">Inactive</option>
             </select>
           </div>
-          <div className="flex items-center gap-2 px-3 py-2 rounded border border-zinc-300 dark:border-zinc-700 text-sm w-full sm:w-auto">
-            <span className="text-zinc-500">Sort</span>
+          <div className="flex flex-col gap-1 w-full sm:w-auto">
+            <span className="text-xs font-medium text-zinc-500">Sort by</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-transparent outline-none w-full sm:w-auto"
+              className="w-full sm:w-56 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm text-zinc-900 dark:text-white shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="name-asc">Name (A-Z)</option>
               <option value="name-desc">Name (Z-A)</option>
@@ -530,11 +522,11 @@ const Clients = () => {
               <option value="company-desc">Company (Z-A)</option>
             </select>
           </div>
-          {(searchTerm || statusFilter !== 'ALL' || sortBy !== 'name-asc') && (
+          {(statusFilter !== 'ALL' || sortBy !== 'name-asc') && (
             <button
               type="button"
               onClick={clearFilters}
-              className="flex items-center justify-center gap-1 px-3 py-2 rounded border border-zinc-300 dark:border-zinc-700 text-sm w-full sm:w-auto"
+              className="flex items-center justify-center gap-1 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm w-full sm:w-auto shadow-sm"
             >
               <X className="size-3" /> Clear
             </button>

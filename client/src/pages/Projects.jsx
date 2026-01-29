@@ -4,10 +4,9 @@ import { Plus, FolderOpen } from 'lucide-react';
 import ProjectCard from '../components/ProjectCard';
 import CreateProjectDialog from '../components/CreateProjectDialog';
 import { useWorkspaceContext } from '../context/workspaceContext';
-import SearchPopover from '../components/SearchPopover';
 
 export default function Projects() {
-  const { currentWorkspace } = useWorkspaceContext();
+  const { currentWorkspace, searchQuery } = useWorkspaceContext();
   const projects = currentWorkspace?.projects || [];
   const user = useSelector((state) => state.auth.user);
   const isAdmin = useMemo(() => {
@@ -18,7 +17,6 @@ export default function Projects() {
   }, [currentWorkspace, user]);
 
   const [filteredProjects, setFilteredProjects] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [filters, setFilters] = useState({
     status: 'ALL',
@@ -28,11 +26,11 @@ export default function Projects() {
   const filterProjects = () => {
     let filtered = projects;
 
-    if (searchTerm) {
+    if (searchQuery) {
       filtered = filtered.filter(
         (project) =>
-          project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          project.description?.toLowerCase().includes(searchTerm.toLowerCase())
+          project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          project.description?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -53,7 +51,7 @@ export default function Projects() {
 
   useEffect(() => {
     filterProjects();
-  }, [projects, searchTerm, filters]);
+  }, [projects, searchQuery, filters]);
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -86,16 +84,11 @@ export default function Projects() {
       </div>
 
       {/* Search and Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <SearchPopover
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search projects"
-        />
+      <div className="flex flex-col md:flex-row gap-3">
         <select
           value={filters.status}
           onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-          className="px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-700 text-gray-900 dark:text-white text-sm w-full md:w-auto"
+          className="px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white text-sm w-full md:w-auto shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
         >
           <option value="ALL">All Status</option>
           <option value="ACTIVE">Active</option>
@@ -107,7 +100,7 @@ export default function Projects() {
         <select
           value={filters.priority}
           onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
-          className="px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-700 text-gray-900 dark:text-white text-sm w-full md:w-auto"
+          className="px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white text-sm w-full md:w-auto shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
         >
           <option value="ALL">All Priority</option>
           <option value="HIGH">High</option>

@@ -4,14 +4,12 @@ import InviteMemberDialog from '../components/InviteMemberDialog';
 import { useSelector } from 'react-redux';
 import Avatar from '../components/Avatar';
 import { useWorkspaceContext } from '../context/workspaceContext';
-import SearchPopover from '../components/SearchPopover';
 
 const Team = () => {
   const [tasks, setTasks] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [users, setUsers] = useState([]);
-  const { currentWorkspace } = useWorkspaceContext();
+  const { currentWorkspace, searchQuery } = useWorkspaceContext();
   const user = useSelector((state) => state.auth.user);
   const memberRole = currentWorkspace?.members?.find(
     (m) => m.user.id === user?.id
@@ -21,8 +19,8 @@ const Team = () => {
 
   const filteredUsers = users.filter(
     (user) =>
-      user?.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user?.user?.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      user?.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user?.user?.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   useEffect(() => {
@@ -131,13 +129,6 @@ const Team = () => {
           </div>
         </div>
       </div>
-
-      {/* Search */}
-      <SearchPopover
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder="Search team members"
-      />
 
       {/* Team Members */}
       <div className="w-full">

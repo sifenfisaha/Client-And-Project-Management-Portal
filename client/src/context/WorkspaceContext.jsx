@@ -8,6 +8,7 @@ export const WorkspaceProvider = ({ children }) => {
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState(() =>
     localStorage.getItem('currentWorkspaceId')
   );
+  const [searchQuery, setSearchQuery] = useState('');
 
   const {
     data: workspaces = [],
@@ -62,6 +63,8 @@ export const WorkspaceProvider = ({ children }) => {
       currentWorkspaceId,
       setCurrentWorkspaceId,
       loading: workspacesLoading || workspaceLoading,
+      searchQuery,
+      setSearchQuery,
     }),
     [
       workspaces,
@@ -69,6 +72,7 @@ export const WorkspaceProvider = ({ children }) => {
       currentWorkspaceId,
       workspacesLoading,
       workspaceLoading,
+      searchQuery,
     ]
   );
 

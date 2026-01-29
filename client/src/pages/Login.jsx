@@ -46,7 +46,7 @@ const Login = () => {
             Sign in
           </h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Use the admin credentials to access the dashboard.
+            Sign in to access your workspace and projects.
           </p>
         </div>
 
