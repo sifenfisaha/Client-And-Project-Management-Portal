@@ -23,6 +23,9 @@ export const updateWorkspace = async (id, payload) =>
     body: JSON.stringify(payload),
   });
 
+export const deleteWorkspace = async (id) =>
+  apiFetch(`/api/workspaces/${id}`, { method: 'DELETE' });
+
 export const createProject = async (payload) =>
   apiFetch('/api/projects', {
     method: 'POST',
