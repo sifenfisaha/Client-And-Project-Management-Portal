@@ -1,10 +1,18 @@
 const getAuthToken = () => localStorage.getItem('authToken');
 const runtimeEnv = typeof window !== 'undefined' ? window.__ENV__ || {} : {};
-const API_BASE_URL = (
-  import.meta.env.VITE_API_URL ||
-  runtimeEnv.VITE_API_URL ||
-  ''
-).replace(/\/$/, '');
+
+const normalizeBaseUrl = (value) => {
+  if (!value) return '';
+  const trimmed = value.trim().replace(/\/$/, '');
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('/')) {
+    return trimmed;
+  }
+  return `https://${trimmed}`;
+};
+
+const API_BASE_URL = normalizeBaseUrl(
+  import.meta.env.VITE_API_URL || runtimeEnv.VITE_API_URL || ''
+);
 
 export const apiFetch = async (path, options = {}) => {
   const headers = {
