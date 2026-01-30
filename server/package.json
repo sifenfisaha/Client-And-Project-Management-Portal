@@ -9,6 +9,7 @@
     "build": "echo \"No build step required\"",
     "db:generate": "drizzle-kit generate --config drizzle.config.cjs",
     "db:migrate": "drizzle-kit migrate --config drizzle.config.cjs",
+    "db:push": "drizzle-kit generate --config drizzle.config.cjs && drizzle-kit up --config drizzle.config.cjs",
     "db:seed": "node src/seed.js",
     "db:studio": "drizzle-kit studio --config drizzle.config.cjs"
   },
@@ -23,7 +24,7 @@
     "resend": "^3.5.0"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.18.1",
+    "drizzle-kit": "^0.31.8",
     "nodemon": "^3.1.0"
   }
 }

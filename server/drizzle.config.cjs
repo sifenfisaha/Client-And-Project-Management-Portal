@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 module.exports = {
-  schema: './src/db/schema.js',
+  schema: path.resolve(__dirname, './src/db/schema.js'),
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
