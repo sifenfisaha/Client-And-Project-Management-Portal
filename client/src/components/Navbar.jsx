@@ -10,7 +10,17 @@ const Navbar = ({ setIsSidebarOpen }) => {
   const dispatch = useDispatch();
   const { theme } = useSelector((state) => state.theme);
   const { user } = useSelector((state) => state.auth);
-  const { searchQuery, setSearchQuery } = useWorkspaceContext();
+  const { searchQuery, setSearchQuery, currentWorkspace } =
+    useWorkspaceContext();
+  const memberRole = currentWorkspace?.members?.find(
+    (member) => member.user?.id === user?.id
+  )?.role;
+  const roleLabel =
+    user?.role === 'ADMIN'
+      ? 'Global Admin'
+      : memberRole === 'ADMIN'
+        ? 'Workspace Admin'
+        : 'User';
 
   return (
     <div className="w-full bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 px-6 xl:px-16 py-3 shrink-0">
@@ -58,7 +68,7 @@ const Navbar = ({ setIsSidebarOpen }) => {
                 {user?.name || user?.email}
               </span>
               <span className="hidden sm:inline text-[10px] uppercase px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800">
-                {user?.role || 'USER'}
+                {roleLabel}
               </span>
             </div>
             <Avatar
