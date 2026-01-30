@@ -25,19 +25,35 @@ export const apiFetch = async (path, options = {}) => {
 
   const url = `${API_BASE_URL}${path}`;
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
+  const timeoutMs = options.timeoutMs ?? 15000;
+  const controller = options.signal ? null : new AbortController();
+  const timeoutId = controller
+    ? setTimeout(() => controller.abort(), timeoutMs)
+    : null;
 
-  if (response.status === 204) return null;
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+      signal: options.signal || controller?.signal,
+    });
 
-  const data = await response.json().catch(() => null);
+    if (response.status === 204) return null;
 
-  if (!response.ok) {
-    const message = data?.message || 'Request failed';
-    throw new Error(message);
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      const message = data?.message || 'Request failed';
+      throw new Error(message);
+    }
+
+    return data;
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      throw new Error('Request timed out');
+    }
+    throw error;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
   }
-
-  return data;
 };

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
@@ -18,6 +18,7 @@ const AcceptInvite = () => {
     data: invite,
     isLoading,
     isError,
+    error,
   } = useInvitationLookup(token, {
     enabled: Boolean(token),
     retry: false,
@@ -29,6 +30,17 @@ const AcceptInvite = () => {
     name: '',
     password: '',
   });
+  const [stalled, setStalled] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setStalled(false);
+      return;
+    }
+
+    const timeoutId = setTimeout(() => setStalled(true), 8000);
+    return () => clearTimeout(timeoutId);
+  }, [isLoading]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -83,7 +95,7 @@ const AcceptInvite = () => {
     );
   }
 
-  if (isLoading) {
+  if (isLoading && !stalled) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         Loading...
@@ -91,10 +103,47 @@ const AcceptInvite = () => {
     );
   }
 
+  if (stalled) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4">
+        <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow p-6 text-center">
+          <h1 className="text-lg font-semibold text-zinc-900 dark:text-white">
+            Still loading invitation
+          </h1>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
+            The invite lookup is taking too long. Check your connection and the
+            API URL, then try again.
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 rounded bg-linear-to-br from-blue-500 to-blue-600 text-white text-sm"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (isError || !invite) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Invite invalid.
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4">
+        <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow p-6 text-center">
+          <h1 className="text-lg font-semibold text-zinc-900 dark:text-white">
+            Unable to load invitation
+          </h1>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
+            {error?.message || 'Invite invalid or expired.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 rounded bg-linear-to-br from-blue-500 to-blue-600 text-white text-sm"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
