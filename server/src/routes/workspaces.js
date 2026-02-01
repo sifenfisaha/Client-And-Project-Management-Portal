@@ -56,6 +56,11 @@ const buildWorkspacePayload = async (workspaceId, user) => {
     .from(workspaceMembers)
     .where(eq(workspaceMembers.workspaceId, workspaceId));
 
+  const globalAdmins = await db
+    .select()
+    .from(users)
+    .where(eq(users.role, 'ADMIN'));
+
   let projectList = await db
     .select()
     .from(projects)
@@ -89,6 +94,7 @@ const buildWorkspacePayload = async (workspaceId, user) => {
   const userIds = new Set([
     workspace.ownerId,
     ...members.map((m) => m.userId),
+    ...globalAdmins.map((admin) => admin.id),
     ...projectList.map((p) => p.team_lead).filter(Boolean),
     ...projectMemberList.map((m) => m.userId),
     ...taskList.map((t) => t.assigneeId).filter(Boolean),
@@ -133,7 +139,22 @@ const buildWorkspacePayload = async (workspaceId, user) => {
     };
   });
 
-  const memberDetails = members.map((member) => ({
+  const memberByUserId = new Map(
+    members.map((member) => [member.userId, member])
+  );
+  const extraGlobalAdmins = globalAdmins
+    .filter((admin) => !memberByUserId.has(admin.id))
+    .map((admin) => ({
+      id: `global_admin_${admin.id}`,
+      workspaceId,
+      userId: admin.id,
+      role: 'GLOBAL_ADMIN',
+      message: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }));
+
+  const memberDetails = [...members, ...extraGlobalAdmins].map((member) => ({
     ...member,
     user: usersMap[member.userId] || null,
   }));

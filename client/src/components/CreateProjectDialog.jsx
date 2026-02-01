@@ -30,6 +30,7 @@ const CreateProjectDialog = ({
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (!initialData) return;
@@ -71,6 +72,46 @@ const CreateProjectDialog = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!currentWorkspace) return;
+
+    const nextErrors = {};
+
+    if (!formData.name.trim()) {
+      nextErrors.name = 'Project name is required.';
+    }
+
+    if (!formData.description.trim()) {
+      nextErrors.description = 'Description is required.';
+    }
+
+    if (!formData.status) {
+      nextErrors.status = 'Status is required.';
+    }
+
+    if (!formData.priority) {
+      nextErrors.priority = 'Priority is required.';
+    }
+
+    if (!formData.start_date) {
+      nextErrors.start_date = 'Start date is required.';
+    }
+
+    if (!formData.end_date) {
+      nextErrors.end_date = 'End date is required.';
+    }
+
+    if (!formData.team_lead) {
+      nextErrors.team_lead = 'Project lead is required.';
+    }
+
+    if (!formData.team_members.length) {
+      nextErrors.team_members = 'At least one team member is required.';
+    }
+
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -142,8 +183,12 @@ const CreateProjectDialog = ({
               }
               placeholder="Enter project name"
               className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
-              required
             />
+            {errors.name && (
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                {errors.name}
+              </p>
+            )}
           </div>
 
           {/* Description */}
@@ -157,6 +202,11 @@ const CreateProjectDialog = ({
               placeholder="Describe your project"
               className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm h-20"
             />
+            {errors.description && (
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                {errors.description}
+              </p>
+            )}
           </div>
 
           {/* Client */}
@@ -169,7 +219,7 @@ const CreateProjectDialog = ({
               }
               className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
             >
-              <option value="">No client</option>
+              <option value="">Select a client</option>
               {clientOptions.map((client) => (
                 <option key={client.id} value={client.id}>
                   {client.name}
@@ -195,6 +245,11 @@ const CreateProjectDialog = ({
                 <option value="ON_HOLD">On Hold</option>
                 <option value="CANCELLED">Cancelled</option>
               </select>
+              {errors.status && (
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                  {errors.status}
+                </p>
+              )}
             </div>
 
             <div>
@@ -210,6 +265,11 @@ const CreateProjectDialog = ({
                 <option value="MEDIUM">Medium</option>
                 <option value="HIGH">High</option>
               </select>
+              {errors.priority && (
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                  {errors.priority}
+                </p>
+              )}
             </div>
           </div>
 
@@ -225,6 +285,11 @@ const CreateProjectDialog = ({
                 }
                 className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
               />
+              {errors.start_date && (
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                  {errors.start_date}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm mb-1">End Date</label>
@@ -240,6 +305,11 @@ const CreateProjectDialog = ({
                 }
                 className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
               />
+              {errors.end_date && (
+                <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                  {errors.end_date}
+                </p>
+              )}
             </div>
           </div>
 
@@ -259,13 +329,18 @@ const CreateProjectDialog = ({
               }
               className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
             >
-              <option value="">No lead</option>
+              <option value="">Select a lead</option>
               {currentWorkspace?.members?.map((member) => (
                 <option key={member.user.email} value={member.user.email}>
                   {member.user.email}
                 </option>
               ))}
             </select>
+            {errors.team_lead && (
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                {errors.team_lead}
+              </p>
+            )}
           </div>
 
           {/* Team Members */}
@@ -296,6 +371,11 @@ const CreateProjectDialog = ({
                   </option>
                 ))}
             </select>
+            {errors.team_members && (
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                {errors.team_members}
+              </p>
+            )}
 
             {formData.team_members.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">

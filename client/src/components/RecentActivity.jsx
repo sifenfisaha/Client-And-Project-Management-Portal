@@ -38,7 +38,10 @@ const RecentActivity = () => {
     const tasks = currentWorkspace.projects.flatMap((project) =>
       project.tasks.map((task) => task)
     );
-    setTasks(tasks);
+    const sortedTasks = tasks
+      .slice()
+      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    setTasks(sortedTasks);
   };
 
   useEffect(() => {

@@ -37,6 +37,12 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
 
   const sidebarRef = useRef(null);
 
+  const handleNavClick = () => {
+    if (window.matchMedia('(max-width: 640px)').matches) {
+      setIsSidebarOpen(false);
+    }
+  };
+
   useEffect(() => {
     function handleClickOutside(event) {
       if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
@@ -61,6 +67,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
               <NavLink
                 to={item.href}
                 key={item.name}
+                onClick={handleNavClick}
                 className={({ isActive }) =>
                   `flex items-center gap-3 py-2 px-4 text-gray-800 dark:text-zinc-100 cursor-pointer rounded transition-all  ${isActive ? 'bg-gray-100 dark:bg-zinc-900 dark:bg-linear-to-br dark:from-zinc-800 dark:to-zinc-800/50  dark:ring-zinc-800' : 'hover:bg-gray-50 dark:hover:bg-zinc-800/60'}`
                 }

@@ -16,6 +16,7 @@ export default function CreateTaskDialog({
   const teamMembers = currentWorkspace?.members || project?.members || [];
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -26,9 +27,48 @@ export default function CreateTaskDialog({
     due_date: '',
   });
 
+  const validateForm = () => {
+    const nextErrors = {};
+
+    if (!formData.title.trim()) {
+      nextErrors.title = 'Title is required.';
+    }
+
+    if (!formData.description.trim()) {
+      nextErrors.description = 'Description is required.';
+    }
+
+    if (!formData.type) {
+      nextErrors.type = 'Type is required.';
+    }
+
+    if (!formData.priority) {
+      nextErrors.priority = 'Priority is required.';
+    }
+
+    if (!formData.assigneeId) {
+      nextErrors.assigneeId = 'Assignee is required.';
+    }
+
+    if (!formData.status) {
+      nextErrors.status = 'Status is required.';
+    }
+
+    if (!formData.due_date) {
+      nextErrors.due_date = 'Due date is required.';
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!currentWorkspace) return;
+
+    if (!validateForm()) {
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -71,8 +111,12 @@ export default function CreateTaskDialog({
               }
               placeholder="Task title"
               className="w-full rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-3 py-2 text-zinc-900 dark:text-zinc-200 text-sm mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
             />
+            {errors.title && (
+              <p className="text-xs text-red-600 dark:text-red-400">
+                {errors.title}
+              </p>
+            )}
           </div>
 
           <div className="space-y-1">
@@ -87,6 +131,11 @@ export default function CreateTaskDialog({
               placeholder="Describe the task"
               className="w-full rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-3 py-2 text-zinc-900 dark:text-zinc-200 text-sm mt-1 h-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+            {errors.description && (
+              <p className="text-xs text-red-600 dark:text-red-400">
+                {errors.description}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -105,6 +154,11 @@ export default function CreateTaskDialog({
                 <option value="IMPROVEMENT">Improvement</option>
                 <option value="OTHER">Other</option>
               </select>
+              {errors.type && (
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  {errors.type}
+                </p>
+              )}
             </div>
 
             <div className="space-y-1">
@@ -120,6 +174,11 @@ export default function CreateTaskDialog({
                 <option value="MEDIUM">Medium</option>
                 <option value="HIGH">High</option>
               </select>
+              {errors.priority && (
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  {errors.priority}
+                </p>
+              )}
             </div>
           </div>
 
@@ -133,13 +192,18 @@ export default function CreateTaskDialog({
                 }
                 className="w-full rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-3 py-2 text-zinc-900 dark:text-zinc-200 text-sm mt-1"
               >
-                <option value="">Unassigned</option>
+                <option value="">Select a teammate</option>
                 {teamMembers.map((member) => (
                   <option key={member?.user?.id} value={member?.user?.id}>
                     {member?.user?.name || member?.user?.email}
                   </option>
                 ))}
               </select>
+              {errors.assigneeId && (
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  {errors.assigneeId}
+                </p>
+              )}
             </div>
 
             <div className="space-y-1">
@@ -155,6 +219,11 @@ export default function CreateTaskDialog({
                 <option value="IN_PROGRESS">In Progress</option>
                 <option value="DONE">Done</option>
               </select>
+              {errors.status && (
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  {errors.status}
+                </p>
+              )}
             </div>
           </div>
 
@@ -172,6 +241,11 @@ export default function CreateTaskDialog({
                 className="w-full rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-3 py-2 text-zinc-900 dark:text-zinc-200 text-sm mt-1"
               />
             </div>
+            {errors.due_date && (
+              <p className="text-xs text-red-600 dark:text-red-400">
+                {errors.due_date}
+              </p>
+            )}
             {formData.due_date && (
               <p className="text-xs text-zinc-500 dark:text-zinc-400">
                 {format(new Date(formData.due_date), 'PPP')}
