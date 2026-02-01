@@ -186,27 +186,19 @@ export default function ProjectSettings({ project }) {
               }
               className="w-full accent-blue-500 dark:accent-blue-400"
             />
-            {isAdmin && (
-              <button
-                type="submit"
-                disabled={isSubmitting || isPending}
-                className="ml-auto flex items-center text-sm justify-center gap-2 bg-linear-to-br from-blue-500 to-blue-600 text-white px-4 py-2 rounded"
-              >
-                <Save className="size-4" />{' '}
-                {isSubmitting || isPending ? 'Saving...' : 'Save Changes'}
-              </button>
-            )}
           </div>
 
           {/* Save Button */}
-          <button
-            type="submit"
-            disabled={isSubmitting || isPending}
-            className="ml-auto flex items-center text-sm justify-center gap-2 bg-linear-to-br from-blue-500 to-blue-600 text-white px-4 py-2 rounded"
-          >
-            <Save className="size-4" />{' '}
-            {isSubmitting || isPending ? 'Saving...' : 'Save Changes'}
-          </button>
+          {isAdmin && (
+            <button
+              type="submit"
+              disabled={isSubmitting || isPending}
+              className="ml-auto flex items-center text-sm justify-center gap-2 bg-linear-to-br from-blue-500 to-blue-600 text-white px-4 py-2 rounded"
+            >
+              <Save className="size-4" />{' '}
+              {isSubmitting || isPending ? 'Saving...' : 'Save Changes'}
+            </button>
+          )}
         </form>
       </div>
 
