@@ -13,7 +13,30 @@ import { requireAuth } from './middleware/auth.js';
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = process.env.CLIENT_URL.split(',').map((o) => o.trim());
+console.log('Allowed Origins:', allowedOrigins);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // allow non-browser requests (Postman, curl)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error('Blocked by CORS'));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
+
+// 🚨 REQUIRED
+app.options('*', cors());
+
 app.use(express.json());
 
 app.get('/api/health', (req, res) => {
