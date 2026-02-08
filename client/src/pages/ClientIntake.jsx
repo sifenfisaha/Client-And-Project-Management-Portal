@@ -55,7 +55,7 @@ const INDUSTRIES = [
 const STEP_TITLES = [
   'Service Selection',
   'Business Details',
-  'Requirements',
+  // 'Requirements',
   'Summary',
 ];
 
@@ -900,53 +900,54 @@ const ServiceQuestions = ({
 };
 
 const SummaryStep = ({ data, onBack, onSubmit, isLoading }) => {
-  const serviceLabel = SERVICES.find((item) => item.id === data.service_type)
-    ?.title;
-  const serviceDetails = (() => {
-    const responses = data.service_responses || {};
-    if (data.service_type === 'website_build') {
-      return [
-        responses.has_site && `Has site: ${responses.has_site}`,
-        responses.current_url && `Current URL: ${responses.current_url}`,
-        (responses.features || []).length > 0 &&
-          `Features: ${(responses.features || []).join(', ')}`,
-        responses.style && `Style: ${responses.style}`,
-      ]
-        .filter(Boolean)
-        .join('\n');
-    }
-    if (data.service_type === 'ai_receptionist') {
-      return [
-        responses.daily_calls && `Daily calls: ${responses.daily_calls}`,
-        responses.frustration && `Frustration: ${responses.frustration}`,
-        (responses.data_points || []).length > 0 &&
-          `Info to collect: ${(responses.data_points || []).join(', ')}`,
-        responses.forward_phone && `Forward phone: ${responses.forward_phone}`,
-      ]
-        .filter(Boolean)
-        .join('\n');
-    }
-    if (data.service_type === 'ai_automation') {
-      return [
-        responses.tasks && `Tasks: ${responses.tasks}`,
-        responses.tools && `Tools: ${responses.tools}`,
-        responses.volume && `Volume: ${responses.volume}`,
-        responses.workflow && `Workflow: ${responses.workflow}`,
-      ]
-        .filter(Boolean)
-        .join('\n');
-    }
-    if (data.service_type === 'software_build') {
-      return [
-        responses.sw_type && `Type: ${responses.sw_type}`,
-        responses.problem && `Problem: ${responses.problem}`,
-        responses.sw_features && `Features: ${responses.sw_features}`,
-      ]
-        .filter(Boolean)
-        .join('\n');
-    }
-    return '';
-  })();
+  // const serviceLabel = SERVICES.find(
+  //   (item) => item.id === data.service_type
+  // )?.title;
+  // const serviceDetails = (() => {
+  //   const responses = data.service_responses || {};
+  //   if (data.service_type === 'website_build') {
+  //     return [
+  //       responses.has_site && `Has site: ${responses.has_site}`,
+  //       responses.current_url && `Current URL: ${responses.current_url}`,
+  //       (responses.features || []).length > 0 &&
+  //         `Features: ${(responses.features || []).join(', ')}`,
+  //       responses.style && `Style: ${responses.style}`,
+  //     ]
+  //       .filter(Boolean)
+  //       .join('\n');
+  //   }
+  //   if (data.service_type === 'ai_receptionist') {
+  //     return [
+  //       responses.daily_calls && `Daily calls: ${responses.daily_calls}`,
+  //       responses.frustration && `Frustration: ${responses.frustration}`,
+  //       (responses.data_points || []).length > 0 &&
+  //         `Info to collect: ${(responses.data_points || []).join(', ')}`,
+  //       responses.forward_phone && `Forward phone: ${responses.forward_phone}`,
+  //     ]
+  //       .filter(Boolean)
+  //       .join('\n');
+  //   }
+  //   if (data.service_type === 'ai_automation') {
+  //     return [
+  //       responses.tasks && `Tasks: ${responses.tasks}`,
+  //       responses.tools && `Tools: ${responses.tools}`,
+  //       responses.volume && `Volume: ${responses.volume}`,
+  //       responses.workflow && `Workflow: ${responses.workflow}`,
+  //     ]
+  //       .filter(Boolean)
+  //       .join('\n');
+  //   }
+  //   if (data.service_type === 'software_build') {
+  //     return [
+  //       responses.sw_type && `Type: ${responses.sw_type}`,
+  //       responses.problem && `Problem: ${responses.problem}`,
+  //       responses.sw_features && `Features: ${responses.sw_features}`,
+  //     ]
+  //       .filter(Boolean)
+  //       .join('\n');
+  //   }
+  //   return '';
+  // })();
 
   return (
     <div className="space-y-8 max-w-3xl mx-auto">
@@ -993,7 +994,7 @@ const SummaryStep = ({ data, onBack, onSubmit, isLoading }) => {
             </div>
             <div>
               <p className="text-gray-400">Website</p>
-              <p className="wrap-break-word">{data.company_website || 'N/A'}</p>
+              <p className="break-words">{data.company_website || 'N/A'}</p>
             </div>
             <div>
               <p className="text-gray-400">Address</p>
@@ -1011,19 +1012,19 @@ const SummaryStep = ({ data, onBack, onSubmit, isLoading }) => {
           <div className="mt-4 text-sm space-y-3">
             <div>
               <p className="text-gray-400">Problem</p>
-              <p className="whitespace-pre-wrap wrap-break-word">
+              <p className="whitespace-pre-wrap break-words">
                 {data.business_details?.problem_solving || 'N/A'}
               </p>
             </div>
             <div>
               <p className="text-gray-400">90-Day Success</p>
-              <p className="whitespace-pre-wrap wrap-break-word">
+              <p className="whitespace-pre-wrap break-words">
                 {data.business_details?.success_90_days || 'N/A'}
               </p>
             </div>
             <div>
               <p className="text-gray-400">Biggest Concern</p>
-              <p className="whitespace-pre-wrap wrap-break-word">
+              <p className="whitespace-pre-wrap break-words">
                 {data.business_details?.biggest_concern || 'N/A'}
               </p>
             </div>
@@ -1037,13 +1038,13 @@ const SummaryStep = ({ data, onBack, onSubmit, isLoading }) => {
           <div className="mt-4 grid sm:grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-gray-400">Goals</p>
-              <p className="whitespace-pre-wrap wrap-break-word">
+              <p className="whitespace-pre-wrap break-words">
                 {data.goals || 'N/A'}
               </p>
             </div>
             <div>
               <p className="text-gray-400">Audience</p>
-              <p className="whitespace-pre-wrap wrap-break-word">
+              <p className="whitespace-pre-wrap break-words">
                 {data.targetAudience || 'N/A'}
               </p>
             </div>
@@ -1057,32 +1058,32 @@ const SummaryStep = ({ data, onBack, onSubmit, isLoading }) => {
             </div>
             <div>
               <p className="text-gray-400">Brand Guidelines</p>
-              <p className="whitespace-pre-wrap wrap-break-word">
+              <p className="whitespace-pre-wrap break-words">
                 {data.brandGuidelines || 'N/A'}
               </p>
             </div>
             <div>
               <p className="text-gray-400">Competitors</p>
-              <p className="whitespace-pre-wrap wrap-break-word">
+              <p className="whitespace-pre-wrap break-words">
                 {data.competitors || 'N/A'}
               </p>
             </div>
             <div>
               <p className="text-gray-400">Success Metrics</p>
-              <p className="whitespace-pre-wrap wrap-break-word">
+              <p className="whitespace-pre-wrap break-words">
                 {data.successMetrics || 'N/A'}
               </p>
             </div>
             <div>
               <p className="text-gray-400">Notes</p>
-              <p className="whitespace-pre-wrap wrap-break-word">
+              <p className="whitespace-pre-wrap break-words">
                 {data.notes || 'N/A'}
               </p>
             </div>
           </div>
         </div>
 
-        <div className={`${cardClassName} p-6`}>
+        {/* <div className={`${cardClassName} p-6`}>
           <p className="text-xs uppercase tracking-[0.2em] text-gray-500">
             Service Requirements
           </p>
@@ -1093,12 +1094,12 @@ const SummaryStep = ({ data, onBack, onSubmit, isLoading }) => {
             </div>
             <div>
               <p className="text-gray-400">Details</p>
-              <p className="whitespace-pre-wrap wrap-break-word">
+              <p className="whitespace-pre-wrap break-words">
                 {serviceDetails || 'N/A'}
               </p>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
 
       <div className="flex justify-between items-center pt-2">
@@ -1171,51 +1172,47 @@ const ClientIntake = () => {
     calendly_event_id: '',
   });
 
-  const isRequirementsComplete = () => {
-    const responses = formData.service_responses || {};
-    if (formData.service_type === 'website_build') {
-      return (
-        Boolean(responses.has_site) &&
-        (responses.features || []).length > 0 &&
-        Boolean(responses.style)
-      );
-    }
-    if (formData.service_type === 'ai_receptionist') {
-      return (
-        Boolean(responses.daily_calls) &&
-        Boolean(responses.frustration) &&
-        (responses.data_points || []).length > 0 &&
-        Boolean(responses.forward_phone)
-      );
-    }
-    if (formData.service_type === 'ai_automation') {
-      return (
-        Boolean(responses.tasks) &&
-        Boolean(responses.tools) &&
-        Boolean(responses.volume) &&
-        Boolean(responses.workflow)
-      );
-    }
-    if (formData.service_type === 'software_build') {
-      return (
-        Boolean(responses.sw_type) &&
-        Boolean(responses.problem) &&
-        Boolean(responses.sw_features)
-      );
-    }
-    return false;
-  };
+  // const isRequirementsComplete = () => {
+  //   const responses = formData.service_responses || {};
+  //   if (formData.service_type === 'website_build') {
+  //     return (
+  //       Boolean(responses.has_site) &&
+  //       (responses.features || []).length > 0 &&
+  //       Boolean(responses.style)
+  //     );
+  //   }
+  //   if (formData.service_type === 'ai_receptionist') {
+  //     return (
+  //       Boolean(responses.daily_calls) &&
+  //       Boolean(responses.frustration) &&
+  //       (responses.data_points || []).length > 0 &&
+  //       Boolean(responses.forward_phone)
+  //     );
+  //   }
+  //   if (formData.service_type === 'ai_automation') {
+  //     return (
+  //       Boolean(responses.tasks) &&
+  //       Boolean(responses.tools) &&
+  //       Boolean(responses.volume) &&
+  //       Boolean(responses.workflow)
+  //     );
+  //   }
+  //   if (formData.service_type === 'software_build') {
+  //     return (
+  //       Boolean(responses.sw_type) &&
+  //       Boolean(responses.problem) &&
+  //       Boolean(responses.sw_features)
+  //     );
+  //   }
+  //   return false;
+  // };
 
   const handleNext = () => {
     if (step === 1 && !formData.service_type) {
       toast.error('Please choose a service to continue.');
       return;
     }
-    if (step === 3 && !isRequirementsComplete()) {
-      toast.error('Please complete the service requirements to continue.');
-      return;
-    }
-    setStep((prev) => Math.min(prev + 1, 4));
+    setStep((prev) => Math.min(prev + 1, 3));
   };
 
   const handleBack = () => {
@@ -1286,7 +1283,7 @@ const ClientIntake = () => {
           <div className="flex justify-center mb-6">
             <CheckCircle className="w-20 h-20 text-[#3191C4]" />
           </div>
-          <h1 className="text-4xl font-bold mb-4">
+          <h1 className="text-4xl font-bold mb-4 text-white">
             Thank you{formData.contact_name ? `, ${formData.contact_name}` : ''}
             !
           </h1>
@@ -1302,19 +1299,23 @@ const ClientIntake = () => {
                 <span className="bg-[#3191C4]/20 text-[#3191C4] p-1 rounded-full text-xs mt-1">
                   1
                 </span>
-                <span>Our team reviews your submission (24-48h).</span>
+                <span>
+                  Our team reviews your submission within 1-2 business days.
+                </span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="bg-[#3191C4]/20 text-[#3191C4] p-1 rounded-full text-xs mt-1">
                   2
                 </span>
-                <span>We'll connect during your scheduled strategy call.</span>
+                <span>We'll contact you to align on goals and next steps.</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="bg-[#3191C4]/20 text-[#3191C4] p-1 rounded-full text-xs mt-1">
                   3
                 </span>
-                <span>Receive your custom project roadmap.</span>
+                <span>
+                  You'll receive a tailored project roadmap and timeline.
+                </span>
               </li>
             </ul>
           </div>
@@ -1333,7 +1334,7 @@ const ClientIntake = () => {
           <h1 className="text-4xl font-bold mt-3">
             Tell us about your project
           </h1>
-          <p className="text-gray-400 mt-3">
+          <p className="text-gray-400 hidden mt-3">
             {intake.workspaceName
               ? `Workspace: ${intake.workspaceName}`
               : 'Share the details so we can align on goals and scope.'}
@@ -1360,6 +1361,7 @@ const ClientIntake = () => {
             />
           )}
 
+          {/*
           {step === 3 && (
             <ServiceQuestions
               serviceType={formData.service_type}
@@ -1372,8 +1374,9 @@ const ClientIntake = () => {
               onBack={handleBack}
             />
           )}
+          */}
 
-          {step === 4 && (
+          {step === 3 && (
             <SummaryStep
               data={formData}
               onBack={handleBack}
