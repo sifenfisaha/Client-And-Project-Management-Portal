@@ -15,6 +15,7 @@ import MyTasks from './pages/MyTasks';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useRef } from 'react';
 import { loadAuthFromStorage } from './features/authSlice';
+import { loadTheme } from './features/themeSlice';
 import { useQueryClient } from '@tanstack/react-query';
 
 const App = () => {
@@ -25,6 +26,7 @@ const App = () => {
 
   useEffect(() => {
     dispatch(loadAuthFromStorage());
+    dispatch(loadTheme());
   }, [dispatch]);
 
   useEffect(() => {
