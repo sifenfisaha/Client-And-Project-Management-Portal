@@ -5,6 +5,7 @@ import nodemailer from 'nodemailer';
 import { and, eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import {
+  clients,
   invitations,
   projectMembers,
   users,
@@ -89,7 +90,9 @@ router.post('/', requireAuth, async (req, res, next) => {
     }
 
     const normalizedRole = role?.toUpperCase();
-    if (!['GLOBAL_ADMIN', 'ADMIN', 'MEMBER'].includes(normalizedRole)) {
+    if (
+      !['GLOBAL_ADMIN', 'ADMIN', 'MEMBER', 'CLIENT'].includes(normalizedRole)
+    ) {
       return res.status(400).json({ message: 'Invalid role' });
     }
 
@@ -205,14 +208,23 @@ router.post('/accept', async (req, res, next) => {
 
     let userId = existingUser?.id;
     const isGlobalAdminInvite = invite.role === 'GLOBAL_ADMIN';
-    const workspaceRole = invite.role === 'MEMBER' ? 'MEMBER' : 'ADMIN';
+    const isClientInvite = invite.role === 'CLIENT';
+    const workspaceRole = isClientInvite
+      ? 'CLIENT'
+      : invite.role === 'MEMBER'
+        ? 'MEMBER'
+        : 'ADMIN';
 
     if (!existingUser) {
       if (!password) {
         return res.status(400).json({ message: 'password is required' });
       }
       const passwordHash = await bcrypt.hash(password, 10);
-      const finalRole = isGlobalAdminInvite ? 'ADMIN' : 'USER';
+      const finalRole = isClientInvite
+        ? 'CLIENT'
+        : isGlobalAdminInvite
+          ? 'ADMIN'
+          : 'USER';
       userId = generateId('user');
       await db.insert(users).values({
         id: userId,
@@ -225,6 +237,11 @@ router.post('/accept', async (req, res, next) => {
       await db
         .update(users)
         .set({ role: 'ADMIN', updatedAt: new Date() })
+        .where(eq(users.id, existingUser.id));
+    } else if (isClientInvite && existingUser.role === 'USER') {
+      await db
+        .update(users)
+        .set({ role: 'CLIENT', updatedAt: new Date() })
         .where(eq(users.id, existingUser.id));
     } else if (!existingUser.password_hash && password) {
       const passwordHash = await bcrypt.hash(password, 10);
@@ -295,6 +312,18 @@ router.post('/accept', async (req, res, next) => {
       .update(invitations)
       .set({ acceptedAt: new Date() })
       .where(eq(invitations.id, invite.id));
+
+    if (isClientInvite) {
+      await db
+        .update(clients)
+        .set({ portalUserId: userId, updatedAt: new Date() })
+        .where(
+          and(
+            eq(clients.email, invite.email),
+            eq(clients.portalWorkspaceId, invite.workspaceId)
+          )
+        );
+    }
 
     const [user] = await db.select().from(users).where(eq(users.id, userId));
     const safeUser = stripSensitive(user);

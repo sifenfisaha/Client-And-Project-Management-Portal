@@ -18,6 +18,27 @@ export const isWorkspaceAdmin = async (userId, workspaceId) => {
   return member?.role === 'ADMIN';
 };
 
+export const getWorkspaceMember = async (userId, workspaceId) => {
+  if (!userId) return null;
+  const [member] = await db
+    .select()
+    .from(workspaceMembers)
+    .where(
+      and(
+        eq(workspaceMembers.workspaceId, workspaceId),
+        eq(workspaceMembers.userId, userId)
+      )
+    )
+    .limit(1);
+
+  return member || null;
+};
+
+export const isWorkspaceClient = async (userId, workspaceId) => {
+  const member = await getWorkspaceMember(userId, workspaceId);
+  return member?.role === 'CLIENT';
+};
+
 export const getWorkspaceMembership = async (userId) => {
   return db
     .select()

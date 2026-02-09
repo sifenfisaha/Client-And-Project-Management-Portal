@@ -36,6 +36,20 @@
       "when": 1770545952344,
       "tag": "0004_silky_triathlon",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1775600000000,
+      "tag": "0005_client_portal",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1770660300944,
+      "tag": "0006_easy_madame_web",
+      "breakpoints": true
     }
   ]
 }

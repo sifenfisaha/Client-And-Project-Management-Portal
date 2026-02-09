@@ -9,7 +9,7 @@ import {
   users,
 } from '../db/schema.js';
 import { generateId } from '../lib/ids.js';
-import { isWorkspaceAdmin } from '../lib/permissions.js';
+import { getWorkspaceMember, isWorkspaceAdmin } from '../lib/permissions.js';
 
 const router = Router();
 
@@ -29,16 +29,18 @@ router.get('/:id', async (req, res, next) => {
 
     if (!task) return res.status(404).json({ message: 'Task not found' });
 
-    if (req.user.role !== 'ADMIN') {
-      const [project] = await db
-        .select()
-        .from(projects)
-        .where(eq(projects.id, task.projectId))
-        .limit(1);
+    const [project] = await db
+      .select()
+      .from(projects)
+      .where(eq(projects.id, task.projectId))
+      .limit(1);
 
-      if (!project)
-        return res.status(404).json({ message: 'Project not found' });
+    if (!project) return res.status(404).json({ message: 'Project not found' });
 
+    if (req.user.role === 'CLIENT') {
+      const member = await getWorkspaceMember(req.user.id, project.workspaceId);
+      if (!member) return res.status(403).json({ message: 'Forbidden' });
+    } else if (req.user.role !== 'ADMIN') {
       const admin = await isWorkspaceAdmin(req.user.id, project.workspaceId);
       if (!admin) {
         const [membership] = await db
@@ -74,6 +76,10 @@ router.get('/:id', async (req, res, next) => {
 
 router.patch('/:id', async (req, res, next) => {
   try {
+    if (req.user.role === 'CLIENT') {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
     const [task] = await db
       .select()
       .from(tasks)
@@ -152,6 +158,32 @@ router.patch('/:id', async (req, res, next) => {
       .from(tasks)
       .where(eq(tasks.id, req.params.id));
 
+    const [portalProject] = await db
+      .select()
+      .from(projects)
+      .where(eq(projects.sourceProjectId, task.projectId))
+      .limit(1);
+
+    if (portalProject && updated) {
+      await db
+        .update(tasks)
+        .set({
+          title: updated.title,
+          description: updated.description,
+          status: updated.status,
+          type: updated.type,
+          priority: updated.priority,
+          due_date: updated.due_date,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(tasks.projectId, portalProject.id),
+            eq(tasks.sourceTaskId, task.id)
+          )
+        );
+    }
+
     res.json(updated || null);
   } catch (error) {
     next(error);
@@ -160,6 +192,10 @@ router.patch('/:id', async (req, res, next) => {
 
 router.delete('/:id', async (req, res, next) => {
   try {
+    if (req.user.role === 'CLIENT') {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
     const [task] = await db
       .select()
       .from(tasks)
@@ -195,6 +231,23 @@ router.delete('/:id', async (req, res, next) => {
       }
     }
 
+    const [portalProject] = await db
+      .select()
+      .from(projects)
+      .where(eq(projects.sourceProjectId, task.projectId))
+      .limit(1);
+
+    if (portalProject) {
+      await db
+        .delete(tasks)
+        .where(
+          and(
+            eq(tasks.projectId, portalProject.id),
+            eq(tasks.sourceTaskId, task.id)
+          )
+        );
+    }
+
     await db.delete(tasks).where(eq(tasks.id, req.params.id));
     res.status(204).send();
   } catch (error) {
@@ -212,16 +265,18 @@ router.get('/:id/comments', async (req, res, next) => {
 
     if (!task) return res.status(404).json({ message: 'Task not found' });
 
-    if (req.user.role !== 'ADMIN') {
-      const [project] = await db
-        .select()
-        .from(projects)
-        .where(eq(projects.id, task.projectId))
-        .limit(1);
+    const [project] = await db
+      .select()
+      .from(projects)
+      .where(eq(projects.id, task.projectId))
+      .limit(1);
 
-      if (!project)
-        return res.status(404).json({ message: 'Project not found' });
+    if (!project) return res.status(404).json({ message: 'Project not found' });
 
+    if (req.user.role === 'CLIENT') {
+      const member = await getWorkspaceMember(req.user.id, project.workspaceId);
+      if (!member) return res.status(403).json({ message: 'Forbidden' });
+    } else if (req.user.role !== 'ADMIN') {
       const admin = await isWorkspaceAdmin(req.user.id, project.workspaceId);
       if (!admin) {
         const [membership] = await db
@@ -265,6 +320,10 @@ router.get('/:id/comments', async (req, res, next) => {
 
 router.post('/:id/comments', async (req, res, next) => {
   try {
+    if (req.user.role === 'CLIENT') {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
     const [task] = await db
       .select()
       .from(tasks)

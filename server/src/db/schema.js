@@ -65,6 +65,11 @@ export const clients = pgTable('clients', {
   website: text('website'),
   industry: text('industry'),
   serviceType: text('service_type'),
+  portalWorkspaceId: text('portal_workspace_id').references(
+    () => workspaces.id
+  ),
+  portalProjectId: text('portal_project_id').references(() => projects.id),
+  portalUserId: text('portal_user_id').references(() => users.id),
   businessDetails: jsonb('business_details').default({}),
   serviceResponses: jsonb('service_responses').default({}),
   uploadedFiles: jsonb('uploaded_files').default([]),
@@ -110,6 +115,7 @@ export const projects = pgTable('projects', {
     .notNull()
     .references(() => workspaces.id),
   clientId: text('client_id').references(() => clients.id),
+  sourceProjectId: text('source_project_id').references(() => projects.id),
   name: text('name').notNull(),
   description: text('description'),
   priority: text('priority').notNull(),
@@ -144,6 +150,7 @@ export const tasks = pgTable('tasks', {
   projectId: text('project_id')
     .notNull()
     .references(() => projects.id),
+  sourceTaskId: text('source_task_id').references(() => tasks.id),
   title: text('title').notNull(),
   description: text('description'),
   status: text('status').notNull(),

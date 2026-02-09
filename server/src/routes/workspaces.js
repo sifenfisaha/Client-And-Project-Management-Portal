@@ -14,7 +14,11 @@ import {
   clientIntakes,
 } from '../db/schema.js';
 import { generateId } from '../lib/ids.js';
-import { getProjectsForUser, isWorkspaceAdmin } from '../lib/permissions.js';
+import {
+  getProjectsForUser,
+  getWorkspaceMember,
+  isWorkspaceAdmin,
+} from '../lib/permissions.js';
 
 const router = Router();
 
@@ -72,9 +76,13 @@ const buildWorkspacePayload = async (workspaceId, user) => {
     .where(eq(clients.workspaceId, workspaceId));
 
   if (user?.role !== 'ADMIN') {
-    const admin = await isWorkspaceAdmin(user.id, workspaceId);
-    if (!admin) {
-      projectList = await getProjectsForUser(user.id, workspaceId);
+    const member = await getWorkspaceMember(user.id, workspaceId);
+    const isClient = user?.role === 'CLIENT' || member?.role === 'CLIENT';
+    if (!isClient) {
+      const admin = await isWorkspaceAdmin(user.id, workspaceId);
+      if (!admin) {
+        projectList = await getProjectsForUser(user.id, workspaceId);
+      }
     }
   }
 
