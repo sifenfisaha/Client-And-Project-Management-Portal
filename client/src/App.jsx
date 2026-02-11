@@ -18,6 +18,7 @@ import ClientFilesLinks from './pages/ClientFilesLinks';
 import ClientInvoices from './pages/ClientInvoices';
 import ClientMessages from './pages/ClientMessages';
 import ClientDetails from './pages/ClientDetails';
+import ClientCalendar from './pages/ClientCalendar';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useRef } from 'react';
 import { loadAuthFromStorage } from './features/authSlice';
@@ -71,6 +72,7 @@ const App = () => {
           <Route path="client-files" element={<ClientFilesLinks />} />
           <Route path="client-invoices" element={<ClientInvoices />} />
           <Route path="client-messages" element={<ClientMessages />} />
+          <Route path="client-calendar" element={<ClientCalendar />} />
           <Route path="projects" element={<Projects />} />
           <Route path="projectsDetail" element={<ProjectDetails />} />
           <Route

@@ -52,9 +52,7 @@ const ClientDashboard = () => {
   const analyticsLink = primaryProject
     ? `/projects/${primaryProject.id}/analytics`
     : '/projects';
-  const calendarLink = primaryProject
-    ? `/projects/${primaryProject.id}/calendar`
-    : '/projects';
+  const calendarLink = '/client-calendar';
 
   return (
     <div className="w-full max-w-6xl mx-auto min-h-full space-y-6 sm:space-y-8">

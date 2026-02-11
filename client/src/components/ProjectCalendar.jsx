@@ -140,9 +140,16 @@ const ProjectCalendar = ({ tasks }) => {
                   className={`bg-zinc-50 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition p-4 rounded border-l-4 ${priorityBorders[task.priority]}`}
                 >
                   <div className="flex justify-between mb-2">
-                    <h4 className="text-zinc-900 dark:text-white font-medium">
-                      {task.title}
-                    </h4>
+                    <div>
+                      <h4 className="text-zinc-900 dark:text-white font-medium">
+                        {task.title}
+                      </h4>
+                      {task.projectName && (
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                          {task.projectName}
+                        </p>
+                      )}
+                    </div>
                     <span
                       className={`px-2 py-0.5 rounded text-xs ${typeColors[task.type]}`}
                     >
@@ -198,6 +205,11 @@ const ProjectCalendar = ({ tasks }) => {
                   <p className="text-xs text-zinc-600 dark:text-zinc-400">
                     {format(new Date(task.due_date), 'MMM d')}
                   </p>
+                  {task.projectName && (
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      {task.projectName}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -226,6 +238,11 @@ const ProjectCalendar = ({ tasks }) => {
                   <p className="text-xs text-red-600 dark:text-red-300">
                     Due {format(new Date(task.due_date), 'MMM d')}
                   </p>
+                  {task.projectName && (
+                    <p className="text-xs text-red-500 dark:text-red-300">
+                      {task.projectName}
+                    </p>
+                  )}
                 </div>
               ))}
               {overdueTasks.length > 5 && (
