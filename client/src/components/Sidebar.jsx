@@ -13,7 +13,6 @@ import {
   FolderOpenIcon,
   LayoutDashboardIcon,
   MessageSquareIcon,
-  SettingsIcon,
   UsersIcon,
   WalletIcon,
 } from 'lucide-react';
@@ -69,12 +68,6 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
         },
         { name: 'Analytics', href: analyticsHref, icon: BarChart3Icon },
         { name: 'Calendar', href: calendarHref, icon: CalendarIcon },
-        {
-          name: 'Settings',
-          href: '/settings',
-          icon: SettingsIcon,
-          exact: true,
-        },
       ]
     : [
         {
@@ -106,12 +99,6 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
               },
             ]
           : []),
-        {
-          name: 'Settings',
-          href: '/settings',
-          icon: SettingsIcon,
-          exact: true,
-        },
       ];
 
   const sidebarRef = useRef(null);

@@ -1,7 +1,9 @@
-import { SearchIcon, PanelLeft } from 'lucide-react';
+import { SearchIcon, PanelLeft, Settings, LogOut } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toggleTheme } from '../features/themeSlice';
 import { MoonIcon, SunIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
 import Avatar from './Avatar';
 import { logout } from '../features/authSlice';
 import { useWorkspaceContext } from '../context/workspaceContext';
@@ -12,6 +14,8 @@ const Navbar = ({ setIsSidebarOpen }) => {
   const { user } = useSelector((state) => state.auth);
   const { searchQuery, setSearchQuery, currentWorkspace } =
     useWorkspaceContext();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef(null);
   const memberRole = currentWorkspace?.members?.find(
     (member) => member.user?.id === user?.id
   )?.role;
@@ -23,6 +27,27 @@ const Navbar = ({ setIsSidebarOpen }) => {
         : memberRole === 'ADMIN'
           ? 'Workspace Admin'
           : 'User';
+
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    const handleClick = (event) => {
+      if (!menuRef.current?.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') setIsMenuOpen(false);
+    };
+
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isMenuOpen]);
 
   return (
     <div className="w-full bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 px-6 xl:px-16 py-3 shrink-0">
@@ -52,19 +77,7 @@ const Navbar = ({ setIsSidebarOpen }) => {
 
         {/* Right section */}
         <div className="flex items-center gap-3">
-          {/* Theme Toggle */}
-          <button
-            onClick={() => dispatch(toggleTheme())}
-            className="size-8 flex items-center justify-center bg-white dark:bg-zinc-800 shadow rounded-lg transition hover:scale-105 active:scale-95"
-          >
-            {theme === 'light' ? (
-              <MoonIcon className="size-4 text-gray-800 dark:text-gray-200" />
-            ) : (
-              <SunIcon className="size-4 text-yellow-400" />
-            )}
-          </button>
-
-          <div className="flex items-center gap-2">
+          <div className="relative flex items-center gap-2" ref={menuRef}>
             <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-300">
               <span className="hidden sm:inline">
                 {user?.name || user?.email}
@@ -73,18 +86,60 @@ const Navbar = ({ setIsSidebarOpen }) => {
                 {roleLabel}
               </span>
             </div>
-            <Avatar
-              src={user?.image}
-              name={user?.name}
-              email={user?.email}
-              className="size-7 rounded-full"
-            />
             <button
-              onClick={() => dispatch(logout())}
-              className="text-xs px-2 py-1 rounded border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300"
+              onClick={() => setIsMenuOpen((prev) => !prev)}
+              className="size-8 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-haspopup="menu"
+              aria-expanded={isMenuOpen}
+              aria-label="Open profile menu"
+              type="button"
             >
-              Sign out
+              <Avatar
+                src={user?.image}
+                name={user?.name}
+                email={user?.email}
+                className="size-7 rounded-full"
+              />
             </button>
+
+            {isMenuOpen ? (
+              <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg p-1 z-50">
+                <Link
+                  to="/settings"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                >
+                  <Settings className="size-4 text-zinc-500 dark:text-zinc-300" />
+                  Settings
+                </Link>
+                <button
+                  onClick={() => {
+                    dispatch(toggleTheme());
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  type="button"
+                >
+                  {theme === 'light' ? (
+                    <MoonIcon className="size-4 text-zinc-600 dark:text-zinc-300" />
+                  ) : (
+                    <SunIcon className="size-4 text-yellow-400" />
+                  )}
+                  {theme === 'light' ? 'Dark mode' : 'Light mode'}
+                </button>
+                <button
+                  onClick={() => {
+                    dispatch(logout());
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2 text-left px-3 py-2 text-sm rounded-lg text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                  type="button"
+                >
+                  <LogOut className="size-4" />
+                  Sign out
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
