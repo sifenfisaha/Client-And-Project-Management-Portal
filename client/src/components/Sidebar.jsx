@@ -97,6 +97,12 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                 icon: BriefcaseIcon,
                 exact: true,
               },
+              {
+                name: 'Leads',
+                href: '/leads',
+                icon: FileTextIcon,
+                exact: true,
+              },
             ]
           : []),
       ];
