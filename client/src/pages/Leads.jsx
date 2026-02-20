@@ -261,14 +261,6 @@ const Leads = () => {
                 </p>
               </div>
 
-              <div>
-                <p className="text-zinc-500 dark:text-zinc-400 text-sm">
-                  Full Submission
-                </p>
-                <pre className="mt-1 p-3 rounded bg-zinc-100 dark:bg-zinc-900 text-xs text-zinc-700 dark:text-zinc-300 overflow-x-auto">
-                  {JSON.stringify(selectedLead.payload, null, 2)}
-                </pre>
-              </div>
             </div>
           </aside>
         </div>
