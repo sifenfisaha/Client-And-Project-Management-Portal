@@ -8,6 +8,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { isWorkspaceAdmin } from '../lib/permissions.js';
 
 const router = Router();
+const WEBHOOK_TIMEOUT_MS = 10000;
 
 const buildIntakeLink = (token) => {
   const baseUrl = process.env.ONBOARDING_PORTAL_URL || 'http://localhost:3000';
@@ -29,6 +30,32 @@ const createIntakeRecord = async ({ workspaceId, clientId = null }) => {
   });
 
   return { token, link: buildIntakeLink(token) };
+};
+
+const postWebhook = async ({ webhookUrl, data }) => {
+  if (!webhookUrl) return;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), WEBHOOK_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const responseText = await response.text().catch(() => '');
+      const details = responseText
+        ? ` (${responseText.slice(0, 200)})`
+        : '';
+      throw new Error(`Webhook returned ${response.status}${details}`);
+    }
+  } finally {
+    clearTimeout(timeoutId);
+  }
 };
 
 router.post('/public', async (req, res, next) => {
@@ -200,6 +227,33 @@ router.post('/submit', async (req, res, next) => {
         clientId,
       })
       .where(eq(clientIntakes.id, intake.id));
+
+    const webhookUrl = process.env.WEBHOOK_URL?.trim();
+    const salesFunnelPayload = {
+      name: payload?.name,
+      email: payload?.email,
+      business_model: payload?.business_model,
+      biggest_bottleneck: payload?.biggest_bottleneck,
+    };
+    const isSalesFunnelPayload =
+      typeof salesFunnelPayload.name === 'string' &&
+      typeof salesFunnelPayload.email === 'string' &&
+      typeof salesFunnelPayload.business_model === 'string' &&
+      typeof salesFunnelPayload.biggest_bottleneck === 'string';
+
+    if (webhookUrl && isSalesFunnelPayload) {
+      try {
+        await postWebhook({
+          webhookUrl,
+          data: salesFunnelPayload,
+        });
+      } catch (error) {
+        console.error('[client-intakes] webhook request failed:', error);
+        return res.status(502).json({
+          message: 'Webhook request failed. Please try again.',
+        });
+      }
+    }
 
     res.json({ message: 'Intake submitted', clientId });
   } catch (error) {
