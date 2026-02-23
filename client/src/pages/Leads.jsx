@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Copy, LinkIcon, UploadCloudIcon, X } from 'lucide-react';
+import { Copy, LinkIcon, Trash2, UploadCloudIcon, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useSelector } from 'react-redux';
 import { useWorkspaceContext } from '../context/workspaceContext';
@@ -7,6 +7,7 @@ import { useClientIntakes, useLeadResources } from '../hooks/useQueries';
 import {
   useCreateFileSignature,
   useCreateLeadResource,
+  useDeleteLeadResource,
 } from '../hooks/useMutations';
 
 const getLeadName = (payload = {}) =>
@@ -70,6 +71,7 @@ const Leads = () => {
     });
   const { mutateAsync: createSignature } = useCreateFileSignature();
   const { mutateAsync: createLeadResource } = useCreateLeadResource();
+  const { mutateAsync: deleteLeadResource } = useDeleteLeadResource();
 
   const [activeTab, setActiveTab] = useState('leads');
   const [selectedLeadId, setSelectedLeadId] = useState(null);
@@ -210,6 +212,25 @@ const Leads = () => {
     } finally {
       setUploadingResource(false);
       event.target.value = '';
+    }
+  };
+
+  const handleDeleteResource = async (resource) => {
+    if (!resource?.id || !workspaceId) return;
+
+    const confirmed = window.confirm(
+      `Delete resource "${resource.label || resource.sourceKey}"?`
+    );
+    if (!confirmed) return;
+
+    try {
+      await deleteLeadResource({
+        resourceId: resource.id,
+        workspaceId,
+      });
+      toast.success('Resource deleted');
+    } catch (error) {
+      toast.error(error?.message || 'Failed to delete resource');
     }
   };
 
@@ -502,7 +523,7 @@ const Leads = () => {
                     <th className="px-4 py-3 font-medium">Source Key</th>
                     <th className="px-4 py-3 font-medium">File</th>
                     <th className="px-4 py-3 font-medium">Updated</th>
-                    <th className="px-4 py-3 font-medium">Action</th>
+                    <th className="px-4 py-3 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -541,19 +562,29 @@ const Leads = () => {
                         {formatDateTime(resource.updatedAt || resource.createdAt)}
                       </td>
                       <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            copyText(
-                              resource.sourceKey,
-                              `Copied src "${resource.sourceKey}"`
-                            )
-                          }
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs rounded border border-zinc-300 dark:border-zinc-700"
-                        >
-                          <Copy className="size-3.5" />
-                          Copy src
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              copyText(
+                                resource.sourceKey,
+                                `Copied src "${resource.sourceKey}"`
+                              )
+                            }
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs rounded border border-zinc-300 dark:border-zinc-700"
+                          >
+                            <Copy className="size-3.5" />
+                            Copy src
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteResource(resource)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs rounded border border-red-300 text-red-700 dark:border-red-800 dark:text-red-300"
+                          >
+                            <Trash2 className="size-3.5" />
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -150,6 +150,11 @@ export const createLeadResource = async (payload) =>
     body: JSON.stringify(payload),
   });
 
+export const deleteLeadResource = async (resourceId) =>
+  apiFetch(`/api/client-intakes/resources/${encodeURIComponent(resourceId)}`, {
+    method: 'DELETE',
+  });
+
 export const sendInvitation = async (payload) =>
   apiFetch('/api/invitations', {
     method: 'POST',

@@ -481,6 +481,45 @@ router.post('/resources', async (req, res, next) => {
   }
 });
 
+router.delete('/resources/:resourceId', async (req, res, next) => {
+  try {
+    const { resourceId } = req.params;
+    if (!resourceId) {
+      return res.status(400).json({ message: 'resourceId is required' });
+    }
+
+    const [resource] = await db
+      .select()
+      .from(sharedFiles)
+      .where(
+        and(
+          eq(sharedFiles.id, resourceId),
+          eq(sharedFiles.type, LEAD_RESOURCE_TYPE)
+        )
+      )
+      .limit(1);
+
+    if (!resource) {
+      return res.status(404).json({ message: 'Lead resource not found' });
+    }
+
+    const admin =
+      req.user.role === 'ADMIN' ||
+      (await isWorkspaceAdmin(req.user.id, resource.workspaceId));
+    if (!admin) return res.status(403).json({ message: 'Forbidden' });
+
+    await db.delete(sharedFiles).where(eq(sharedFiles.id, resource.id));
+
+    res.json({
+      message: 'Lead resource deleted',
+      id: resource.id,
+      workspaceId: resource.workspaceId,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/', async (req, res, next) => {
   try {
     const { workspaceId } = req.query;

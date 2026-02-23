@@ -30,6 +30,7 @@ import {
   updateInvoice,
   createInvoiceCheckoutSession,
   createLeadResource,
+  deleteLeadResource,
 } from '../api';
 import {
   clientKeys,
@@ -396,6 +397,21 @@ export const useCreateLeadResource = () => {
     mutationFn: createLeadResource,
     onSuccess: (created, variables) => {
       const workspaceId = created?.workspaceId || variables?.workspaceId;
+      if (workspaceId) {
+        queryClient.invalidateQueries({
+          queryKey: leadResourceKeys.list(workspaceId),
+        });
+      }
+    },
+  });
+};
+
+export const useDeleteLeadResource = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ resourceId }) => deleteLeadResource(resourceId),
+    onSuccess: (deleted, variables) => {
+      const workspaceId = deleted?.workspaceId || variables?.workspaceId;
       if (workspaceId) {
         queryClient.invalidateQueries({
           queryKey: leadResourceKeys.list(workspaceId),
