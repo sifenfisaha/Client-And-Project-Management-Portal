@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import {
   ArrowLeft,
   CalendarDays,
+  ChevronDown,
   CheckCircle,
   Clock3,
   Globe,
@@ -235,7 +236,11 @@ const BookingForm = () => {
 
     if (!formData.first_name.trim()) nextErrors.first_name = 'Required';
     if (!formData.last_name.trim()) nextErrors.last_name = 'Required';
-    if (!formData.phone.trim()) nextErrors.phone = 'Required';
+    if (!formData.phone.trim()) {
+      nextErrors.phone = 'Required';
+    } else if (!/^[+]?[-()\d\s]{7,20}$/.test(formData.phone.trim())) {
+      nextErrors.phone = 'Invalid phone number';
+    }
 
     if (!formData.email.trim()) {
       nextErrors.email = 'Required';
@@ -243,8 +248,16 @@ const BookingForm = () => {
       nextErrors.email = 'Invalid email';
     }
 
-    if (!formData.website_url.trim()) nextErrors.website_url = 'Required';
+    if (!formData.website_url.trim()) {
+      nextErrors.website_url = 'Required';
+    } else if (!/^https?:\/\/.+/i.test(formData.website_url.trim())) {
+      nextErrors.website_url = 'Website must start with http:// or https://';
+    }
+
     if (!formData.business_type) nextErrors.business_type = 'Required';
+    if (!formData.target_audience) nextErrors.target_audience = 'Required';
+    if (!formData.monthly_revenue) nextErrors.monthly_revenue = 'Required';
+    if (!formData.decision_maker) nextErrors.decision_maker = 'Required';
 
     if (!selectedTime) nextErrors.selected_time = 'Please select a time';
 
@@ -665,24 +678,37 @@ const BookingForm = () => {
                         <label className="block text-sm font-medium text-gray-300 mb-1.5">
                           What type of business are you? *
                         </label>
-                        <select
-                          value={formData.business_type}
-                          onChange={(event) =>
-                            updateField('business_type', event.target.value)
-                          }
-                          className={`w-full bg-[#111111] border ${
-                            errors.business_type
-                              ? 'border-red-500'
-                              : 'border-white/10'
-                          } rounded-xl px-4 py-3 text-gray-300 focus:outline-none focus:border-[#14A3F6] transition-colors appearance-none`}
-                        >
-                          <option value="">Select...</option>
-                          {BUSINESS_TYPES.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
+                        <div className="relative">
+                          <select
+                            value={formData.business_type}
+                            onChange={(event) =>
+                              updateField('business_type', event.target.value)
+                            }
+                            style={{ colorScheme: 'dark' }}
+                            className={`w-full bg-white/5 border ${
+                              errors.business_type
+                                ? 'border-red-500'
+                                : 'border-white/10 hover:border-white/30'
+                            } rounded-xl px-4 py-3 pr-10 text-gray-200 focus:outline-none focus:border-[#14A3F6] transition-all appearance-none`}
+                          >
+                            <option
+                              value=""
+                              className="bg-[#0b0b0b] text-gray-300"
+                            >
+                              Select...
                             </option>
-                          ))}
-                        </select>
+                            {BUSINESS_TYPES.map((option) => (
+                              <option
+                                key={option}
+                                value={option}
+                                className="bg-[#0b0b0b] text-white"
+                              >
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-gray-400 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
+                        </div>
                         {errors.business_type && (
                           <p className="text-red-500 text-xs mt-1">
                             {errors.business_type}
@@ -692,47 +718,92 @@ const BookingForm = () => {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1.5">
-                          Who is your primary target audience?
+                          Who is your primary target audience? *
                         </label>
-                        <select
-                          value={formData.target_audience}
-                          onChange={(event) =>
-                            updateField('target_audience', event.target.value)
-                          }
-                          className="w-full bg-[#111111] border border-white/10 rounded-xl px-4 py-3 text-gray-300 focus:outline-none focus:border-[#14A3F6] transition-colors appearance-none"
-                        >
-                          <option value="">Select...</option>
-                          {TARGET_AUDIENCES.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
+                        <div className="relative">
+                          <select
+                            value={formData.target_audience}
+                            onChange={(event) =>
+                              updateField('target_audience', event.target.value)
+                            }
+                            style={{ colorScheme: 'dark' }}
+                            className={`w-full bg-white/5 border ${
+                              errors.target_audience
+                                ? 'border-red-500'
+                                : 'border-white/10 hover:border-white/30'
+                            } rounded-xl px-4 py-3 pr-10 text-gray-200 focus:outline-none focus:border-[#14A3F6] transition-all appearance-none`}
+                          >
+                            <option
+                              value=""
+                              className="bg-[#0b0b0b] text-gray-300"
+                            >
+                              Select...
                             </option>
-                          ))}
-                        </select>
+                            {TARGET_AUDIENCES.map((option) => (
+                              <option
+                                key={option}
+                                value={option}
+                                className="bg-[#0b0b0b] text-white"
+                              >
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-gray-400 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
+                        </div>
+                        {errors.target_audience && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.target_audience}
+                          </p>
+                        )}
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1.5">
-                          What is your current average monthly revenue?
+                          What is your current average monthly revenue? *
                         </label>
-                        <select
-                          value={formData.monthly_revenue}
-                          onChange={(event) =>
-                            updateField('monthly_revenue', event.target.value)
-                          }
-                          className="w-full bg-[#111111] border border-white/10 rounded-xl px-4 py-3 text-gray-300 focus:outline-none focus:border-[#14A3F6] transition-colors appearance-none"
-                        >
-                          <option value="">Select...</option>
-                          {MONTHLY_REVENUE_OPTIONS.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
+                        <div className="relative">
+                          <select
+                            value={formData.monthly_revenue}
+                            onChange={(event) =>
+                              updateField('monthly_revenue', event.target.value)
+                            }
+                            style={{ colorScheme: 'dark' }}
+                            className={`w-full bg-white/5 border ${
+                              errors.monthly_revenue
+                                ? 'border-red-500'
+                                : 'border-white/10 hover:border-white/30'
+                            } rounded-xl px-4 py-3 pr-10 text-gray-200 focus:outline-none focus:border-[#14A3F6] transition-all appearance-none`}
+                          >
+                            <option
+                              value=""
+                              className="bg-[#0b0b0b] text-gray-300"
+                            >
+                              Select...
                             </option>
-                          ))}
-                        </select>
+                            {MONTHLY_REVENUE_OPTIONS.map((option) => (
+                              <option
+                                key={option}
+                                value={option}
+                                className="bg-[#0b0b0b] text-white"
+                              >
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-gray-400 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
+                        </div>
+                        {errors.monthly_revenue && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.monthly_revenue}
+                          </p>
+                        )}
                       </div>
 
                       <div>
                         <p className="block text-sm font-medium text-gray-300 mb-2">
                           Are you the primary decision maker for your business?
+                          *
                         </p>
                         <div className="space-y-2.5">
                           {DECISION_MAKER_OPTIONS.map((option) => {
@@ -742,7 +813,7 @@ const BookingForm = () => {
                             return (
                               <label
                                 key={option}
-                                className={`flex items-start gap-3 rounded-xl px-4 py-3 cursor-pointer border transition-all ${
+                                className={`flex items-center gap-3 rounded-xl px-4 py-3 cursor-pointer border transition-all ${
                                   isSelected
                                     ? 'border-[#14A3F6] bg-[#14A3F6]/10 shadow-[0_0_16px_rgba(20,163,246,0.2)]'
                                     : 'border-white/10 hover:border-white/30 hover:bg-white/5'
@@ -755,23 +826,8 @@ const BookingForm = () => {
                                   onChange={() =>
                                     updateField('decision_maker', option)
                                   }
-                                  className="sr-only"
+                                  className="h-4 w-4 shrink-0 accent-[#14A3F6] cursor-pointer"
                                 />
-                                <span
-                                  className={`mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
-                                    isSelected
-                                      ? 'border-[#14A3F6]'
-                                      : 'border-white/25'
-                                  }`}
-                                >
-                                  <span
-                                    className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                                      isSelected
-                                        ? 'bg-[#14A3F6]'
-                                        : 'bg-transparent'
-                                    }`}
-                                  />
-                                </span>
                                 <span
                                   className={`text-sm leading-relaxed ${
                                     isSelected ? 'text-white' : 'text-gray-300'
@@ -783,6 +839,11 @@ const BookingForm = () => {
                             );
                           })}
                         </div>
+                        {errors.decision_maker && (
+                          <p className="text-red-500 text-xs mt-1">
+                            {errors.decision_maker}
+                          </p>
+                        )}
                       </div>
 
                       {errors.selected_time && (
