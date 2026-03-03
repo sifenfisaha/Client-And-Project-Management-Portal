@@ -4,13 +4,13 @@ import toast from 'react-hot-toast';
 import {
   ArrowLeft,
   CalendarDays,
-  ChevronDown,
   CheckCircle,
   Clock3,
   Globe,
   Loader2,
   Send,
 } from 'lucide-react';
+import CustomSelect from '../components/CustomSelect';
 import { useMeetingLinkLookup } from '../hooks/useQueries';
 import {
   useCreatePublicMeetingLink,
@@ -23,30 +23,41 @@ const BRAND_COLOR = '#14A3F6';
 const SUCCESS_COLOR = '#10B981';
 
 const BUSINESS_TYPES = [
-  'Agency',
-  'Ecommerce',
-  'SaaS',
-  'Coaching',
-  'Real Estate',
-  'Healthcare',
-  'Other',
+  'SaaS (Software as a Service)',
+  'Marketing / Advertising Agency',
+  'Coaching / Consulting',
+  'Online Education / Courses',
+  'E-commerce (Physical Products)',
+  'Local Service Business (Real Estate, Med Spa, Contractor, etc.)',
+  'Financial Services',
+  'Health & Wellness',
+  'Personal Brand / Influencer',
+  'Nonprofit Organization',
+  'Other...',
 ];
 
 const TARGET_AUDIENCES = [
-  'B2B',
-  'B2C',
-  'Local Businesses',
-  'Global Market',
-  'Enterprise',
+  'B2B (Businesses)',
+  'B2C (Consumers)',
+  'Enterprise Companies',
+  'Startups',
+  'Local Customers',
+  'High-Net-Worth Individuals',
+  'Professionals (Doctors, Lawyers, Advisors, etc.)',
+  'Entrepreneurs',
+  'Women',
+  'Men',
+  'Parents / Families',
   'Other',
 ];
 
 const MONTHLY_REVENUE_OPTIONS = [
-  '$0 - $5k',
-  '$5k - $20k',
-  '$20k - $50k',
-  '$50k - $100k',
-  '$100k+',
+  '$0 - $1K /mo',
+  '$1k - 5K /mo',
+  '$5k - 25K /mo',
+  '$25k - 50K /mo',
+  '$50k - 100K /mo',
+  '$100k - 250K+ /mo',
 ];
 
 const DECISION_MAKER_OPTIONS = [
@@ -349,17 +360,19 @@ const BookingForm = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-[#FFFFFD] flex flex-col items-center justify-center py-6 px-4 sm:px-6">
-      <div className="mb-8">
+    <div className="min-h-screen bg-black text-[#FFFFFD] flex flex-col items-center justify-center py-4 px-3 sm:py-6 sm:px-6">
+      <div className="mb-5 sm:mb-8">
         <div className="flex items-center gap-4">
           <img
             src="/clientreachai.logo.png"
             alt="ClientReach.ai Logo"
-            className="h-14 w-auto object-contain"
+            className="h-10 sm:h-14 w-auto object-contain"
           />
           <div className="flex flex-col leading-none -ml-3">
-            <span className="text-3xl font-bold text-white">Client</span>
-            <span className="text-3xl font-bold text-white -mt-2">
+            <span className="text-2xl sm:text-3xl font-bold text-white">
+              Client
+            </span>
+            <span className="text-2xl sm:text-3xl font-bold text-white -mt-1.5 sm:-mt-2">
               Reach
               <span
                 className="transition-all duration-300 hover:drop-shadow-[0_0_15px_rgba(20,163,246,0.8)]"
@@ -374,29 +387,29 @@ const BookingForm = () => {
 
       <div className="w-full max-w-5xl">
         {(step === 'schedule' || step === 'details') && (
-          <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md shadow-2xl overflow-hidden">
+          <div className="rounded-2xl sm:rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md shadow-2xl overflow-hidden">
             <div className="grid grid-cols-1 md:grid-cols-[320px_1fr]">
-              <aside className="border-b md:border-b-0 md:border-r border-white/10 p-6 md:p-8 space-y-6">
+              <aside className="border-b md:border-b-0 md:border-r border-white/10 p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
                 <button
                   type="button"
                   onClick={() => {
                     if (step === 'details') setStep('schedule');
                   }}
-                  className="w-10 h-10 rounded-full border border-white/20 inline-flex items-center justify-center hover:border-white/40 transition-colors"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-white/20 inline-flex items-center justify-center hover:border-white/40 transition-colors"
                 >
                   <ArrowLeft
-                    className="w-5 h-5"
+                    className="w-4 h-4 sm:w-5 sm:h-5"
                     style={{ color: BRAND_COLOR }}
                   />
                 </button>
 
-                <div className="space-y-3 text-gray-300">
+                <div className="space-y-2.5 sm:space-y-3 text-sm sm:text-base text-gray-300">
                   <div className="flex items-center gap-3">
-                    <Clock3 className="w-5 h-5 text-gray-400" />
+                    <Clock3 className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                     <span className="font-medium">{duration} Mins</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <CalendarDays className="w-5 h-5 text-gray-400" />
+                    <CalendarDays className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                     <span>
                       {selectedTime
                         ? `${selectedTime} - ${selectedDateLabel}`
@@ -404,7 +417,7 @@ const BookingForm = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Globe className="w-5 h-5 text-gray-400" />
+                    <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                     <span>
                       {timezoneOffsetLabel
                         ? `${timezone} (${timezoneOffsetLabel})`
@@ -414,14 +427,14 @@ const BookingForm = () => {
                 </div>
               </aside>
 
-              <main className="p-6 md:p-8">
+              <main className="p-4 sm:p-6 md:p-8">
                 {step === 'schedule' && (
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between gap-4">
-                      <h2 className="text-3xl font-bold text-white">
+                  <div className="space-y-5 sm:space-y-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                      <h2 className="text-2xl sm:text-3xl font-bold text-white">
                         Select Date & Time
                       </h2>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         <button
                           type="button"
                           onClick={() =>
@@ -438,7 +451,7 @@ const BookingForm = () => {
                         >
                           ‹
                         </button>
-                        <p className="font-medium text-gray-200">
+                        <p className="font-medium text-sm sm:text-base text-gray-200">
                           {monthLabel}
                         </p>
                         <button
@@ -463,7 +476,7 @@ const BookingForm = () => {
 
                     <div className="grid grid-cols-1 lg:grid-cols-[1fr_220px] gap-6">
                       <div>
-                        <div className="grid grid-cols-7 gap-2 text-center text-sm text-gray-500 mb-2">
+                        <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center text-xs sm:text-sm text-gray-500 mb-2">
                           {[
                             'Sun',
                             'Mon',
@@ -476,13 +489,13 @@ const BookingForm = () => {
                             <div key={label}>{label}</div>
                           ))}
                         </div>
-                        <div className="grid grid-cols-7 gap-2">
+                        <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
                           {calendarDays.map((cell, index) => {
                             if (!cell) {
                               return (
                                 <div
                                   key={`blank-${index}`}
-                                  className="h-10 rounded-md"
+                                  className="h-9 sm:h-10 rounded-md"
                                 />
                               );
                             }
@@ -493,7 +506,7 @@ const BookingForm = () => {
                                 key={cell.key}
                                 type="button"
                                 onClick={() => setSelectedDateKey(cell.key)}
-                                className={`h-10 rounded-full text-sm transition border ${
+                                className={`h-9 sm:h-10 rounded-full text-xs sm:text-sm transition border ${
                                   isSelected
                                     ? 'text-white border-transparent font-semibold'
                                     : 'border-white/15 text-gray-300 hover:border-white/40'
@@ -547,17 +560,20 @@ const BookingForm = () => {
                 )}
 
                 {step === 'details' && (
-                  <form onSubmit={handleSubmit} className="space-y-5">
+                  <form
+                    onSubmit={handleSubmit}
+                    className="space-y-5 text-sm sm:text-base"
+                  >
                     <div className="mb-1">
-                      <h2 className="text-3xl font-bold mb-2 text-white">
+                      <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-white">
                         Enter Details
                       </h2>
-                      <p className="text-gray-400">
+                      <p className="text-sm sm:text-base text-gray-400">
                         Complete your information to book the meeting.
                       </p>
                     </div>
 
-                    <div className="space-y-5 max-h-140 overflow-y-auto pr-1">
+                    <div className="space-y-5 max-h-[65vh] sm:max-h-140 overflow-y-auto pr-0 sm:pr-1">
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1.5">
                           First Name *
@@ -678,37 +694,14 @@ const BookingForm = () => {
                         <label className="block text-sm font-medium text-gray-300 mb-1.5">
                           What type of business are you? *
                         </label>
-                        <div className="relative">
-                          <select
-                            value={formData.business_type}
-                            onChange={(event) =>
-                              updateField('business_type', event.target.value)
-                            }
-                            style={{ colorScheme: 'dark' }}
-                            className={`w-full bg-white/5 border ${
-                              errors.business_type
-                                ? 'border-red-500'
-                                : 'border-white/10 hover:border-white/30'
-                            } rounded-xl px-4 py-3 pr-10 text-gray-200 focus:outline-none focus:border-[#14A3F6] transition-all appearance-none`}
-                          >
-                            <option
-                              value=""
-                              className="bg-[#0b0b0b] text-gray-300"
-                            >
-                              Select...
-                            </option>
-                            {BUSINESS_TYPES.map((option) => (
-                              <option
-                                key={option}
-                                value={option}
-                                className="bg-[#0b0b0b] text-white"
-                              >
-                                {option}
-                              </option>
-                            ))}
-                          </select>
-                          <ChevronDown className="w-4 h-4 text-gray-400 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
-                        </div>
+                        <CustomSelect
+                          value={formData.business_type}
+                          onChange={(value) =>
+                            updateField('business_type', value)
+                          }
+                          options={BUSINESS_TYPES}
+                          hasError={Boolean(errors.business_type)}
+                        />
                         {errors.business_type && (
                           <p className="text-red-500 text-xs mt-1">
                             {errors.business_type}
@@ -720,37 +713,14 @@ const BookingForm = () => {
                         <label className="block text-sm font-medium text-gray-300 mb-1.5">
                           Who is your primary target audience? *
                         </label>
-                        <div className="relative">
-                          <select
-                            value={formData.target_audience}
-                            onChange={(event) =>
-                              updateField('target_audience', event.target.value)
-                            }
-                            style={{ colorScheme: 'dark' }}
-                            className={`w-full bg-white/5 border ${
-                              errors.target_audience
-                                ? 'border-red-500'
-                                : 'border-white/10 hover:border-white/30'
-                            } rounded-xl px-4 py-3 pr-10 text-gray-200 focus:outline-none focus:border-[#14A3F6] transition-all appearance-none`}
-                          >
-                            <option
-                              value=""
-                              className="bg-[#0b0b0b] text-gray-300"
-                            >
-                              Select...
-                            </option>
-                            {TARGET_AUDIENCES.map((option) => (
-                              <option
-                                key={option}
-                                value={option}
-                                className="bg-[#0b0b0b] text-white"
-                              >
-                                {option}
-                              </option>
-                            ))}
-                          </select>
-                          <ChevronDown className="w-4 h-4 text-gray-400 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
-                        </div>
+                        <CustomSelect
+                          value={formData.target_audience}
+                          onChange={(value) =>
+                            updateField('target_audience', value)
+                          }
+                          options={TARGET_AUDIENCES}
+                          hasError={Boolean(errors.target_audience)}
+                        />
                         {errors.target_audience && (
                           <p className="text-red-500 text-xs mt-1">
                             {errors.target_audience}
@@ -762,37 +732,14 @@ const BookingForm = () => {
                         <label className="block text-sm font-medium text-gray-300 mb-1.5">
                           What is your current average monthly revenue? *
                         </label>
-                        <div className="relative">
-                          <select
-                            value={formData.monthly_revenue}
-                            onChange={(event) =>
-                              updateField('monthly_revenue', event.target.value)
-                            }
-                            style={{ colorScheme: 'dark' }}
-                            className={`w-full bg-white/5 border ${
-                              errors.monthly_revenue
-                                ? 'border-red-500'
-                                : 'border-white/10 hover:border-white/30'
-                            } rounded-xl px-4 py-3 pr-10 text-gray-200 focus:outline-none focus:border-[#14A3F6] transition-all appearance-none`}
-                          >
-                            <option
-                              value=""
-                              className="bg-[#0b0b0b] text-gray-300"
-                            >
-                              Select...
-                            </option>
-                            {MONTHLY_REVENUE_OPTIONS.map((option) => (
-                              <option
-                                key={option}
-                                value={option}
-                                className="bg-[#0b0b0b] text-white"
-                              >
-                                {option}
-                              </option>
-                            ))}
-                          </select>
-                          <ChevronDown className="w-4 h-4 text-gray-400 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
-                        </div>
+                        <CustomSelect
+                          value={formData.monthly_revenue}
+                          onChange={(value) =>
+                            updateField('monthly_revenue', value)
+                          }
+                          options={MONTHLY_REVENUE_OPTIONS}
+                          hasError={Boolean(errors.monthly_revenue)}
+                        />
                         {errors.monthly_revenue && (
                           <p className="text-red-500 text-xs mt-1">
                             {errors.monthly_revenue}
@@ -857,7 +804,7 @@ const BookingForm = () => {
                       <button
                         type="submit"
                         disabled={submitting}
-                        className="text-white py-3 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full sm:w-auto text-white py-3 px-6 rounded-xl font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         style={{
                           backgroundColor: BRAND_COLOR,
                           boxShadow: `0 10px 30px -10px ${BRAND_COLOR}80`,
@@ -883,17 +830,19 @@ const BookingForm = () => {
         )}
 
         {step === 'success' && (
-          <div className="p-8 rounded-3xl text-center max-w-xl mx-auto border border-white/10 bg-white/5 backdrop-blur-md shadow-[0_0_20px_rgba(49,145,196,0.3)]">
-            <div className="flex justify-center mb-6">
-              <div className="w-24 h-24 rounded-full flex items-center justify-center border border-[#10B981]/20 bg-[#10B981]/10 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+          <div className="p-6 sm:p-8 rounded-2xl sm:rounded-3xl text-center max-w-xl mx-auto border border-white/10 bg-white/5 backdrop-blur-md shadow-[0_0_20px_rgba(49,145,196,0.3)]">
+            <div className="flex justify-center mb-5 sm:mb-6">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center border border-[#10B981]/20 bg-[#10B981]/10 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
                 <CheckCircle
-                  className="w-12 h-12 drop-shadow-[0_0_15px_rgba(16,185,129,0.6)]"
+                  className="w-10 h-10 sm:w-12 sm:h-12 drop-shadow-[0_0_15px_rgba(16,185,129,0.6)]"
                   style={{ color: SUCCESS_COLOR }}
                 />
               </div>
             </div>
-            <h2 className="text-4xl font-bold mb-4">Meeting Scheduled</h2>
-            <p className="text-lg text-gray-400 mb-8 leading-relaxed">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">
+              Meeting Scheduled
+            </h2>
+            <p className="text-base sm:text-lg text-gray-400 mb-0 sm:mb-8 leading-relaxed">
               We received your booking for {selectedDateLabel} at {selectedTime}
               .
             </p>
@@ -901,7 +850,7 @@ const BookingForm = () => {
         )}
       </div>
 
-      <div className="mt-12 text-center text-gray-600 text-xs">
+      <div className="mt-8 sm:mt-12 text-center text-gray-600 text-xs">
         <p>
           &copy; {new Date().getFullYear()} ClientReach.ai. All rights reserved.
         </p>
