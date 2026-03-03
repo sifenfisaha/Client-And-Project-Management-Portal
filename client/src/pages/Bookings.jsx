@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { Copy, ExternalLink, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Copy, ExternalLink, Trash2, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useSelector } from 'react-redux';
 import { useWorkspaceContext } from '../context/workspaceContext';
@@ -29,6 +29,8 @@ const Bookings = () => {
   });
   const { mutateAsync: deleteMeeting, isPending: deletingMeeting } =
     useDeleteMeeting();
+  const [selectedMeetingId, setSelectedMeetingId] = useState(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const publicBookingUrl = workspaceId
     ? `${window.location.origin}/booking?workspaceId=${encodeURIComponent(
@@ -43,6 +45,22 @@ const Bookings = () => {
       return bTime - aTime;
     });
   }, [meetings]);
+
+  const selectedMeeting =
+    sortedMeetings.find((meeting) => meeting.id === selectedMeetingId) || null;
+
+  useEffect(() => {
+    if (!selectedMeetingId) return;
+
+    const meetingStillExists = sortedMeetings.some(
+      (meeting) => meeting.id === selectedMeetingId
+    );
+
+    if (!meetingStillExists) {
+      setSelectedMeetingId(null);
+      setIsDetailsOpen(false);
+    }
+  }, [sortedMeetings, selectedMeetingId]);
 
   const copyLink = async () => {
     if (!publicBookingUrl) {
@@ -73,6 +91,12 @@ const Bookings = () => {
         meetingId: meeting.id,
         workspaceId,
       });
+
+      if (selectedMeetingId === meeting.id) {
+        setSelectedMeetingId(null);
+        setIsDetailsOpen(false);
+      }
+
       toast.success('Booking deleted');
     } catch (error) {
       toast.error(error?.message || 'Failed to delete booking');
@@ -170,7 +194,15 @@ const Bookings = () => {
                 {sortedMeetings.map((meeting) => (
                   <tr
                     key={meeting.id}
-                    className="border-t border-zinc-200 dark:border-zinc-800"
+                    onClick={() => {
+                      setSelectedMeetingId(meeting.id);
+                      setIsDetailsOpen(true);
+                    }}
+                    className={`border-t border-zinc-200 dark:border-zinc-800 cursor-pointer ${
+                      selectedMeeting?.id === meeting.id
+                        ? 'bg-blue-50/70 dark:bg-blue-500/10'
+                        : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/60'
+                    }`}
                   >
                     <td className="p-3">
                       {meeting.firstName} {meeting.lastName}
@@ -189,7 +221,10 @@ const Bookings = () => {
                     </td>
                     <td className="p-3">{formatDate(meeting.scheduledAt)}</td>
                     <td className="p-3">{meeting.timezone || 'N/A'}</td>
-                    <td className="p-3">
+                    <td
+                      className="p-3"
+                      onClick={(event) => event.stopPropagation()}
+                    >
                       <button
                         type="button"
                         onClick={() => deleteBooking(meeting)}
@@ -207,6 +242,158 @@ const Bookings = () => {
           </div>
         )}
       </div>
+
+      {isDetailsOpen && selectedMeeting && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <button
+            type="button"
+            aria-label="Close booking details"
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setIsDetailsOpen(false)}
+          />
+
+          <aside
+            role="dialog"
+            aria-modal="true"
+            className="relative h-full w-full max-w-2xl border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 overflow-y-auto"
+          >
+            <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/95 backdrop-blur">
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
+                  Booking Details
+                </h2>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  {selectedMeeting.firstName} {selectedMeeting.lastName}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDetailsOpen(false)}
+                className="inline-flex items-center justify-center size-8 rounded border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <div className="grid sm:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-zinc-500 dark:text-zinc-400">First Name</p>
+                  <p className="text-zinc-900 dark:text-zinc-100">
+                    {selectedMeeting.firstName || 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 dark:text-zinc-400">Last Name</p>
+                  <p className="text-zinc-900 dark:text-zinc-100">
+                    {selectedMeeting.lastName || 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 dark:text-zinc-400">Email</p>
+                  <p className="text-zinc-900 dark:text-zinc-100 break-all">
+                    {selectedMeeting.email || 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 dark:text-zinc-400">Phone</p>
+                  <p className="text-zinc-900 dark:text-zinc-100">
+                    {selectedMeeting.phone || 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 dark:text-zinc-400">
+                    Website URL
+                  </p>
+                  <p className="text-zinc-900 dark:text-zinc-100 break-all">
+                    {selectedMeeting.websiteUrl ||
+                      selectedMeeting.payload?.website_url ||
+                      'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 dark:text-zinc-400">
+                    Business Type
+                  </p>
+                  <p className="text-zinc-900 dark:text-zinc-100">
+                    {selectedMeeting.businessType ||
+                      selectedMeeting.payload?.business_type ||
+                      'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 dark:text-zinc-400">
+                    Target Audience
+                  </p>
+                  <p className="text-zinc-900 dark:text-zinc-100">
+                    {selectedMeeting.targetAudience ||
+                      selectedMeeting.payload?.target_audience ||
+                      'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 dark:text-zinc-400">
+                    Monthly Revenue
+                  </p>
+                  <p className="text-zinc-900 dark:text-zinc-100">
+                    {selectedMeeting.monthlyRevenue ||
+                      selectedMeeting.payload?.monthly_revenue ||
+                      'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 dark:text-zinc-400">
+                    Decision Maker
+                  </p>
+                  <p className="text-zinc-900 dark:text-zinc-100">
+                    {selectedMeeting.decisionMaker ||
+                      selectedMeeting.payload?.decision_maker ||
+                      'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 dark:text-zinc-400">Status</p>
+                  <p className="text-zinc-900 dark:text-zinc-100">
+                    {selectedMeeting.status || 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 dark:text-zinc-400">Scheduled</p>
+                  <p className="text-zinc-900 dark:text-zinc-100">
+                    {formatDate(selectedMeeting.scheduledAt)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 dark:text-zinc-400">
+                    Scheduled End
+                  </p>
+                  <p className="text-zinc-900 dark:text-zinc-100">
+                    {formatDate(selectedMeeting.scheduledEndAt)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 dark:text-zinc-400">Timezone</p>
+                  <p className="text-zinc-900 dark:text-zinc-100">
+                    {selectedMeeting.timezone ||
+                      selectedMeeting.payload?.timezone ||
+                      'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-500 dark:text-zinc-400">
+                    Duration (mins)
+                  </p>
+                  <p className="text-zinc-900 dark:text-zinc-100">
+                    {selectedMeeting.durationMinutes ||
+                      selectedMeeting.payload?.duration_minutes ||
+                      'N/A'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      )}
     </div>
   );
 };
