@@ -8,6 +8,20 @@
       "when": 1772533242894,
       "tag": "0000_outgoing_night_thrasher",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1773229582486,
+      "tag": "0001_aspiring_agent_brand",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773230321534,
+      "tag": "0002_groovy_romulus",
+      "breakpoints": true
     }
   ]
 }

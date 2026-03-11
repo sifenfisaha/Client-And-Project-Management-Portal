@@ -1,124 +1,25 @@
 import { Router } from 'express';
 import crypto from 'crypto';
-import nodemailer from 'nodemailer';
 import { and, desc, eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
-import { meetingLinks, meetings, workspaces } from '../db/schema.js';
+import {
+  meetingLinks,
+  meetingReminders,
+  meetings,
+  workspaces,
+} from '../db/schema.js';
 import { generateId } from '../lib/ids.js';
+import {
+  buildMeetingReminderValues,
+  sendMeetingBookingEmails,
+} from '../lib/meetingNotifications.js';
 import { requireAuth } from '../middleware/auth.js';
 import { isWorkspaceAdmin } from '../lib/permissions.js';
 
 const router = Router();
+const BOOKING_TIMEZONE = 'Europe/London';
 
 const toSafeString = (value) => (typeof value === 'string' ? value.trim() : '');
-
-const escapeHtml = (value = '') =>
-  String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-const formatBookingDate = (scheduledAt, timezone) => {
-  if (!scheduledAt) return 'N/A';
-
-  const date = new Date(scheduledAt);
-  if (Number.isNaN(date.getTime())) return 'N/A';
-
-  try {
-    return date.toLocaleString('en-US', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-      timeZone: timezone || undefined,
-    });
-  } catch {
-    return date.toLocaleString();
-  }
-};
-
-const sendMeetingBookingEmails = async ({
-  workspaceName,
-  firstName,
-  lastName,
-  phone,
-  email,
-  websiteUrl,
-  businessType,
-  targetAudience,
-  monthlyRevenue,
-  decisionMaker,
-  timezone,
-  durationMinutes,
-  scheduledAt,
-}) => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error('EMAIL_USER or EMAIL_PASS is not configured');
-  }
-
-  const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER;
-  const ownerEmail = process.env.EMAIL_USER;
-  const fullName = `${firstName} ${lastName}`.trim();
-  const formattedDate = formatBookingDate(scheduledAt, timezone);
-  const safeWorkspaceName = workspaceName || 'your workspace';
-
-  const customerHtml = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111827;">
-      <h2 style="margin: 0 0 12px;">Booking Confirmed ✅</h2>
-      <p style="margin: 0 0 12px;">Hi ${escapeHtml(firstName)}, your booking has been received.</p>
-      <p style="margin: 0 0 4px;"><strong>Workspace:</strong> ${escapeHtml(safeWorkspaceName)}</p>
-      <p style="margin: 0 0 4px;"><strong>Date & Time:</strong> ${escapeHtml(formattedDate)}</p>
-      <p style="margin: 0 0 4px;"><strong>Timezone:</strong> ${escapeHtml(timezone || 'N/A')}</p>
-      <p style="margin: 0 0 12px;"><strong>Duration:</strong> ${escapeHtml(String(durationMinutes || 'N/A'))} minutes</p>
-      <p style="margin: 0; color: #4b5563;">Thanks for booking with us.</p>
-    </div>
-  `;
-
-  const ownerHtml = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111827;">
-      <h2 style="margin: 0 0 12px;">New Booking Received 📅</h2>
-      <p style="margin: 0 0 4px;"><strong>Name:</strong> ${escapeHtml(fullName || 'N/A')}</p>
-      <p style="margin: 0 0 4px;"><strong>Email:</strong> ${escapeHtml(email || 'N/A')}</p>
-      <p style="margin: 0 0 4px;"><strong>Phone:</strong> ${escapeHtml(phone || 'N/A')}</p>
-      <p style="margin: 0 0 4px;"><strong>Website:</strong> ${escapeHtml(websiteUrl || 'N/A')}</p>
-      <p style="margin: 0 0 4px;"><strong>Business Type:</strong> ${escapeHtml(businessType || 'N/A')}</p>
-      <p style="margin: 0 0 4px;"><strong>Target Audience:</strong> ${escapeHtml(targetAudience || 'N/A')}</p>
-      <p style="margin: 0 0 4px;"><strong>Monthly Revenue:</strong> ${escapeHtml(monthlyRevenue || 'N/A')}</p>
-      <p style="margin: 0 0 4px;"><strong>Decision Maker:</strong> ${escapeHtml(decisionMaker || 'N/A')}</p>
-      <p style="margin: 0 0 4px;"><strong>Workspace:</strong> ${escapeHtml(safeWorkspaceName)}</p>
-      <p style="margin: 0 0 4px;"><strong>Date & Time:</strong> ${escapeHtml(formattedDate)}</p>
-      <p style="margin: 0 0 4px;"><strong>Timezone:</strong> ${escapeHtml(timezone || 'N/A')}</p>
-      <p style="margin: 0;"><strong>Duration:</strong> ${escapeHtml(String(durationMinutes || 'N/A'))} minutes</p>
-    </div>
-  `;
-
-  const mailJobs = [
-    transporter.sendMail({
-      from: fromAddress,
-      to: email,
-      subject: 'Your booking is confirmed',
-      html: customerHtml,
-    }),
-    transporter.sendMail({
-      from: fromAddress,
-      to: ownerEmail,
-      subject: `New booking: ${fullName || 'Unknown contact'}`,
-      html: ownerHtml,
-    }),
-  ];
-
-  await Promise.all(mailJobs);
-};
 
 const buildBookingLink = (token) => {
   const baseUrl = process.env.ONBOARDING_PORTAL_URL || 'http://localhost:3000';
@@ -129,7 +30,7 @@ const createMeetingLinkRecord = async ({
   workspaceId,
   title = 'Discovery Call',
   durationMinutes = 45,
-  timezone = 'Africa/Addis_Ababa',
+  timezone = BOOKING_TIMEZONE,
 }) => {
   const token = crypto.randomBytes(24).toString('hex');
   const meetingLinkId = generateId('meeting_link');
@@ -209,7 +110,7 @@ router.get('/lookup', async (req, res, next) => {
       workspaceId: linkRecord.workspaceId,
       workspaceName: workspace?.name || null,
       durationMinutes: linkRecord.durationMinutes,
-      timezone: linkRecord.timezone,
+      timezone: BOOKING_TIMEZONE,
       title: linkRecord.title,
     });
   } catch (error) {
@@ -257,7 +158,7 @@ router.post('/submit', async (req, res, next) => {
     const targetAudience = toSafeString(payload?.target_audience);
     const monthlyRevenue = toSafeString(payload?.monthly_revenue);
     const decisionMaker = toSafeString(payload?.decision_maker);
-    const timezone = toSafeString(payload?.timezone) || linkRecord.timezone;
+    const timezone = BOOKING_TIMEZONE;
     const scheduledAtValue = toSafeString(payload?.scheduled_at);
 
     if (!firstName || !lastName || !phone || !email || !scheduledAtValue) {
@@ -276,12 +177,16 @@ router.post('/submit', async (req, res, next) => {
       Number(payload?.duration_minutes) > 0
         ? Number(payload.duration_minutes)
         : linkRecord.durationMinutes;
+    const meetingId = generateId('meeting');
 
     const scheduledEndAt = new Date(
       scheduledAt.getTime() + durationMinutes * 60 * 1000
     );
+    const reminderValues = buildMeetingReminderValues({
+      meetingId,
+      scheduledAt,
+    });
 
-    const meetingId = generateId('meeting');
     await db.transaction(async (tx) => {
       await tx.insert(meetings).values({
         id: meetingId,
@@ -304,6 +209,10 @@ router.post('/submit', async (req, res, next) => {
         payload: payload || {},
         updatedAt: new Date(),
       });
+
+      if (reminderValues.length) {
+        await tx.insert(meetingReminders).values(reminderValues);
+      }
 
       await tx
         .update(meetingLinks)

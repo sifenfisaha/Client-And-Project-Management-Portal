@@ -1,0 +1,1 @@
+ALTER TABLE "meeting_links" ALTER COLUMN "timezone" SET DEFAULT 'Europe/London';

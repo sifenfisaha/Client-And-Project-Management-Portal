@@ -17,7 +17,7 @@ import {
   useSubmitMeetingBooking,
 } from '../hooks/useMutations';
 
-const TIMEZONE = 'Africa/Addis_Ababa';
+const TIMEZONE = 'Europe/London';
 const DURATION_MINUTES = 45;
 const BRAND_COLOR = '#14A3F6';
 const SUCCESS_COLOR = '#10B981';
@@ -75,6 +75,14 @@ const toDateKey = (date) => {
   return `${year}-${month}-${day}`;
 };
 
+const fromDateKey = (dateKey) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateKey || '');
+  if (!match) return new Date();
+
+  const [, year, month, day] = match;
+  return new Date(Number(year), Number(month) - 1, Number(day));
+};
+
 const formatPrettyDate = (date) =>
   date.toLocaleDateString(undefined, {
     weekday: 'short',
@@ -98,10 +106,39 @@ const getTimezoneOffsetLabel = (timeZone, date = new Date()) => {
     return null;
   }
 };
+const getZonedDateParts = (date, timeZone) => {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
 
-const buildIsoFromDateAndTime = (date, time12h) => {
+  const parts = formatter.formatToParts(date);
+
+  return {
+    year: Number(parts.find((part) => part.type === 'year')?.value || 0),
+    month: Number(parts.find((part) => part.type === 'month')?.value || 0),
+    day: Number(parts.find((part) => part.type === 'day')?.value || 0),
+    hour: Number(parts.find((part) => part.type === 'hour')?.value || 0),
+    minute: Number(parts.find((part) => part.type === 'minute')?.value || 0),
+  };
+};
+
+const buildIsoFromDateAndTime = (dateKey, time12h, timeZone = TIMEZONE) => {
   const match = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(time12h || '');
   if (!match) return null;
+
+  const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateKey || '');
+  if (!dateMatch) return null;
+
+  const [, yearValue, monthValue, dayValue] = dateMatch;
+  const year = Number(yearValue);
+  const month = Number(monthValue);
+  const day = Number(dayValue);
 
   let hours = Number(match[1]);
   const minutes = Number(match[2]);
@@ -110,9 +147,28 @@ const buildIsoFromDateAndTime = (date, time12h) => {
   if (period === 'PM' && hours !== 12) hours += 12;
   if (period === 'AM' && hours === 12) hours = 0;
 
-  const next = new Date(date);
-  next.setHours(hours, minutes, 0, 0);
-  return next.toISOString();
+  let utcDate = new Date(Date.UTC(year, month - 1, day, hours, minutes, 0, 0));
+
+  for (let index = 0; index < 3; index += 1) {
+    const zoned = getZonedDateParts(utcDate, timeZone);
+    const targetValue = Date.UTC(year, month - 1, day, hours, minutes);
+    const zonedValue = Date.UTC(
+      zoned.year,
+      zoned.month - 1,
+      zoned.day,
+      zoned.hour,
+      zoned.minute
+    );
+
+    const diffMinutes = Math.round((targetValue - zonedValue) / 60000);
+    if (diffMinutes === 0) {
+      return utcDate.toISOString();
+    }
+
+    utcDate = new Date(utcDate.getTime() + diffMinutes * 60 * 1000);
+  }
+
+  return utcDate.toISOString();
 };
 
 const BookingForm = () => {
@@ -121,7 +177,6 @@ const BookingForm = () => {
   const workspaceIdParam = searchParams.get('workspaceId');
 
   const [bookingToken, setBookingToken] = useState(tokenParam);
-  const [browserTimezone, setBrowserTimezone] = useState('');
   const [publicInitError, setPublicInitError] = useState(null);
   const [step, setStep] = useState('schedule');
 
@@ -168,17 +223,6 @@ const BookingForm = () => {
   }, [tokenParam]);
 
   useEffect(() => {
-    try {
-      const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      if (detected) {
-        setBrowserTimezone(detected);
-      }
-    } catch {
-      setBrowserTimezone('');
-    }
-  }, []);
-
-  useEffect(() => {
     let isActive = true;
 
     const initializePublicBooking = async () => {
@@ -207,7 +251,7 @@ const BookingForm = () => {
   }, [tokenParam, bookingToken, workspaceIdParam, createPublicMeetingLink]);
 
   const selectedDate = useMemo(() => {
-    const parsed = new Date(selectedDateKey);
+    const parsed = fromDateKey(selectedDateKey);
     return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
   }, [selectedDateKey]);
 
@@ -241,7 +285,7 @@ const BookingForm = () => {
 
   const selectedDateLabel = formatPrettyDate(selectedDate);
   const duration = bookingMeta?.durationMinutes || DURATION_MINUTES;
-  const timezone = browserTimezone || bookingMeta?.timezone || TIMEZONE;
+  const timezone = TIMEZONE;
   const timezoneOffsetLabel = useMemo(
     () => getTimezoneOffsetLabel(timezone, selectedDate),
     [timezone, selectedDate]
@@ -292,7 +336,11 @@ const BookingForm = () => {
     event.preventDefault();
     if (!validateDetails()) return;
 
-    const scheduledAt = buildIsoFromDateAndTime(selectedDate, selectedTime);
+    const scheduledAt = buildIsoFromDateAndTime(
+      selectedDateKey,
+      selectedTime,
+      TIMEZONE
+    );
     if (!scheduledAt) {
       toast.error('Invalid selected time');
       return;

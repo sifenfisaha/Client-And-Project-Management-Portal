@@ -14,6 +14,7 @@ import messagesRouter from './routes/messages.js';
 import invoicesRouter from './routes/invoices.js';
 import stripeRouter from './routes/stripe.js';
 import meetingsRouter from './routes/meetings.js';
+import { startMeetingReminderJob } from './jobs/meetingReminderJob.js';
 import { requireAuth } from './middleware/auth.js';
 
 const app = express();
@@ -59,4 +60,5 @@ app.use((err, req, res, next) => {
 const port = process.env.PORT || 4000;
 app.listen(port, () => {
   console.log(`API server listening on ${port}`);
+  startMeetingReminderJob();
 });

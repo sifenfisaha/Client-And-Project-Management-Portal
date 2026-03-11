@@ -1,4 +1,12 @@
-import { pgTable, text, timestamp, jsonb, integer } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  timestamp,
+  jsonb,
+  integer,
+  index,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: text('id').primaryKey(),
@@ -145,7 +153,7 @@ export const meetingLinks = pgTable('meeting_links', {
   status: text('status').default('OPEN').notNull(),
   title: text('title'),
   durationMinutes: integer('duration_minutes').default(45).notNull(),
-  timezone: text('timezone').default('Africa/Addis_Ababa').notNull(),
+  timezone: text('timezone').default('Europe/London').notNull(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true })
     .defaultNow()
@@ -185,6 +193,39 @@ export const meetings = pgTable('meetings', {
     .defaultNow()
     .notNull(),
 });
+
+export const meetingReminders = pgTable(
+  'meeting_reminders',
+  {
+    id: text('id').primaryKey(),
+    meetingId: text('meeting_id')
+      .notNull()
+      .references(() => meetings.id, { onDelete: 'cascade' }),
+    reminderType: text('reminder_type').notNull(),
+    minutesBefore: integer('minutes_before').notNull(),
+    scheduledFor: timestamp('scheduled_for', { withTimezone: true }).notNull(),
+    status: text('status').default('PENDING').notNull(),
+    processingAt: timestamp('processing_at', { withTimezone: true }),
+    sentAt: timestamp('sent_at', { withTimezone: true }),
+    error: text('error'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => ({
+    meetingTypeUniqueIdx: uniqueIndex('meeting_reminders_meeting_type_uidx').on(
+      table.meetingId,
+      table.reminderType
+    ),
+    statusScheduleIdx: index('meeting_reminders_status_scheduled_idx').on(
+      table.status,
+      table.scheduledFor
+    ),
+  })
+);
 
 export const projects = pgTable('projects', {
   id: text('id').primaryKey(),
